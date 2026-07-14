@@ -1,11 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ヒヤリハット投稿 | 消防ヒヤリハット共有システム</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+<header>
+    <h1>📝 ヒヤリハット投稿</h1>
+    <p class="subTitle">同じ事例を繰り返さないために、気づきを共有しましょう。</p>
+</header>
+
+<form id="reportForm">
+
+<section class="news">
+
+<h2>基本情報</h2>
+
+<label>発生日</label>
+<input type="date" id="date" required>
+
+<label>所属</label>
+<select id="department" required>
+    <option value="">選択してください</option>
+    <option>消防本部</option>
+    <option>○○署</option>
+    <option>○○分署</option>
+</select>
+
+<label>業務区分</label>
+<select id="category">
+    <option>消火</option>
+    <option>救助</option>
+    <option>救急</option>
+    <option>予防</option>
+    <option>査察</option>
+    <option>指令</option>
+    <option>その他</option>
+</select>
+
+<label>発生場所</label>
+<input type="text" id="place" placeholder="例：車庫、現場、庁舎">
+
+<label>ヒヤリハットレベル</label>
+<select id="level">
+    <option>レベル1（軽微）</option>
+    <option>レベル2（注意）</option>
+    <option>レベル3（重大）</option>
+    <option>レベル4（事故寸前）</option>
+</select>
+
+</section>
+
+<section class="news">
+
+<h2>事例内容</h2>
+
+<label>タイトル</label>
+<input type="text" id="title" required>
+
+<label>発生状況</label>
+<textarea id="situation" rows="4"></textarea>
+
+<label>原因</label>
+<textarea id="cause" rows="4"></textarea>
+
+<label>改善策</label>
+<textarea id="countermeasure" rows="4"></textarea>
+
+<label>この事例から学んだこと</label>
+<textarea id="lesson" rows="4"></textarea>
+
+</section>
+
+<section class="news">
+
+<h2>タグ</h2>
+
+<input type="text" id="tags"
+placeholder="例：転倒, 車両, 救急">
+
+</section>
+
+<div style="text-align:center; margin-top:25px;">
+
+<button class="menuButton" type="submit">
+
+📤 投稿する
+
+</button>
+
+</div>
+
+</form>
+
+<div style="text-align:center; margin-top:20px;">
+<a href="index.html">🏠 ホームへ戻る</a>
+</div>
+
 <footer>
 
-Version 0.1.0<br>
-Developed by coconutswanwanwan-commits
+Version 0.1.0
 
 </footer>
 
 <script src="app.js"></script>
+
+</div>
 
 </body>
 </html>
