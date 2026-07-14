@@ -131,4 +131,40 @@ header h1{
     font-size:1.6rem;
 }
 
+}/* ===== 入力フォーム ===== */
+
+label{
+    display:block;
+    margin-top:18px;
+    margin-bottom:6px;
+    font-weight:bold;
+}
+
+input,
+select,
+textarea{
+
+    width:100%;
+    padding:12px;
+
+    border:1px solid #ccc;
+
+    border-radius:10px;
+
+    font-size:16px;
+
+}
+
+textarea{
+
+    resize:vertical;
+
+}
+
+button{
+
+    border:none;
+
+    cursor:pointer;
+
 }
