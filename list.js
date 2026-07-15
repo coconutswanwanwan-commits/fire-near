@@ -1,51 +1,135 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ヒヤリハット一覧 | 消防ヒヤリハット共有システム</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+import { db } from "./firebase.js";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-<div class="container">
+const reportList = document.getElementById("reportList");
+const searchBox = document.getElementById("searchBox");
 
-<header>
-    <h1>📚 ヒヤリハット一覧</h1>
-    <p class="subTitle">投稿されたヒヤリハット事例です。</p>
-</header>
+let reports = [];
 
-<section class="news">
+// 一覧表示
+function displayReports(data) {
 
-    <h2>🔍 キーワード検索</h2>
+  reportList.innerHTML = "";
 
-    <input
-        type="text"
-        id="searchBox"
-        placeholder="タイトル・内容・原因などを検索">
+  if (data.length === 0) {
+    reportList.innerHTML = "<p>該当する事例はありません。</p>";
+    return;
+  }
 
-</section>
+  data.forEach((report) => {
 
-<section class="news">
+    let badge = "";
 
-    <div id="reportList">
-        読み込み中...
-    </div>
+    switch (report.level) {
 
-</section>
+      case "レベル1（軽微）":
+        badge = '<span class="level level1">🟢 レベル1</span>';
+        break;
 
-<div style="text-align:center; margin-top:20px;">
-    <a href="index.html">🏠 ホームへ戻る</a>
-</div>
+      case "レベル2（注意）":
+        badge = '<span class="level level2">🟡 レベル2</span>';
+        break;
 
-<footer>
-Version 0.2.0
-</footer>
+      case "レベル3（重大）":
+        badge = '<span class="level level3">🟠 レベル3</span>';
+        break;
 
-</div>
+      case "レベル4（事故寸前）":
+        badge = '<span class="level level4">🔴 レベル4</span>';
+        break;
 
-<script type="module" src="firebase.js"></script>
-<script type="module" src="list.js"></script>
+      default:
+        badge = report.level;
+    }
 
-</body>
-</html>
+    reportList.innerHTML += `
+      <div class="news">
+
+        <h3>
+          <a href="detail.html?id=${report.id}">
+            ${report.title}
+          </a>
+        </h3>
+
+        <p><strong>所属：</strong>${report.department}</p>
+
+        <p><strong>業務区分：</strong>${report.category}</p>
+
+        <p>${badge}</p>
+
+        <p><strong>発生日：</strong>${report.date}</p>
+
+      </div>
+    `;
+  });
+
+}
+
+// Firestoreから取得
+async function loadReports() {
+
+  try {
+
+    const q = query(
+      collection(db, "reports"),
+      orderBy("createdAt", "desc")
+    );
+
+    const snapshot = await getDocs(q);
+
+    reports = [];
+
+    snapshot.forEach((doc) => {
+
+      reports.push({
+        id: doc.id,
+        ...doc.data()
+      });
+
+    });
+
+    displayReports(reports);
+
+  } catch (error) {
+
+    console.error(error);
+    reportList.innerHTML =
+      "<p>一覧の読み込みに失敗しました。</p>";
+
+  }
+
+}
+
+// キーワード検索
+searchBox.addEventListener("input", () => {
+
+  const keyword = searchBox.value.trim().toLowerCase();
+
+  if (keyword === "") {
+    displayReports(reports);
+    return;
+  }
+
+  const filtered = reports.filter((report) => {
+
+    return (
+      (report.title || "").toLowerCase().includes(keyword) ||
+      (report.situation || "").toLowerCase().includes(keyword) ||
+      (report.cause || "").toLowerCase().includes(keyword) ||
+      (report.countermeasure || "").toLowerCase().includes(keyword) ||
+      (report.lesson || "").toLowerCase().includes(keyword)
+    );
+
+  });
+
+  displayReports(filtered);
+
+});
+
+// 初期表示
+loadReports();
