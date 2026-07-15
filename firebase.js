@@ -1,8 +1,16 @@
 // Firebase SDK
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+
 import {
   getFirestore
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+import {
+  getAuth
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
 
 // Firebase設定
 const firebaseConfig = {
@@ -15,11 +23,25 @@ const firebaseConfig = {
   measurementId: "G-VX0766Q76W"
 };
 
+
 // Firebase初期化
-const app = initializeApp(firebaseConfig);
+const app =
+  initializeApp(firebaseConfig);
+
 
 // Firestore
-const db = getFirestore(app);
+const db =
+  getFirestore(app);
 
-// 他のファイルから使えるようにする
-export { db };
+
+// Authentication
+const auth =
+  getAuth(app);
+
+
+// 他のJavaScriptから使用
+export {
+  app,
+  db,
+  auth
+};
