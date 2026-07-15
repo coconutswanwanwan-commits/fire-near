@@ -50,6 +50,7 @@
         .ranking-list {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
 
         .ranking-item {
@@ -81,6 +82,7 @@
             color: #0d47a1;
             font-weight: bold;
             text-decoration: none;
+            overflow-wrap: anywhere;
         }
 
         .ranking-info {
@@ -95,12 +97,73 @@
             background: #eef5ff;
             color: #0d47a1;
             font-weight: bold;
+            white-space: nowrap;
         }
 
         .ranking-message {
             padding: 15px 0;
             color: #666;
             text-align: center;
+        }
+
+        .notice-section {
+            border-left: 6px solid #00838f;
+        }
+
+        .notice-title {
+            margin-bottom: 15px;
+            color: #006064;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .notice-body {
+            margin: 0;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .notice-updated {
+            margin-top: 18px;
+            color: #777;
+            font-size: 0.85rem;
+            text-align: right;
+        }
+
+        .notice-loading,
+        .notice-error {
+            padding: 12px 0;
+            color: #666;
+        }
+
+        .notice-error {
+            color: #b71c1c;
+        }
+
+        .admin-link-area {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .admin-link {
+            display: inline-block;
+            padding: 10px 18px;
+            border-radius: 20px;
+            background: #eceff1;
+            color: #455a64;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            .ranking-item {
+                align-items: flex-start;
+            }
+
+            .ranking-helpful {
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
@@ -123,8 +186,11 @@
     <section
         class="news featured-section"
         id="featuredSection"
+        hidden
     >
-        <h2>📌 重要事例</h2>
+        <h2>
+            📌 重要事例
+        </h2>
 
         <div id="featuredReports">
             読み込み中...
@@ -133,7 +199,10 @@
 
 
     <section class="today">
-        <h2>本日の投稿件数</h2>
+
+        <h2>
+            本日の投稿件数
+        </h2>
 
         <div
             class="count"
@@ -144,12 +213,18 @@
 
         <p
             id="todayCountMessage"
-            style="margin-top:8px; color:#666; font-size:0.9rem;"
+            style="
+                margin-top:8px;
+                color:#666;
+                font-size:0.9rem;
+            "
         ></p>
+
     </section>
 
 
     <nav>
+
         <a
             href="post.html"
             class="menuButton"
@@ -157,6 +232,7 @@
             📝<br>
             投稿する
         </a>
+
 
         <a
             href="cases.html"
@@ -166,6 +242,7 @@
             事例を見る
         </a>
 
+
         <a
             href="list.html"
             class="menuButton"
@@ -174,6 +251,7 @@
             検索する
         </a>
 
+
         <a
             href="stats.html"
             class="menuButton"
@@ -181,11 +259,15 @@
             📊<br>
             統計を見る
         </a>
+
     </nav>
 
 
     <section class="news">
-        <h2>🏆 人気事例 TOP5</h2>
+
+        <h2>
+            🏆 人気事例 TOP5
+        </h2>
 
         <div
             id="popularReports"
@@ -193,51 +275,55 @@
         >
             読み込み中...
         </div>
+
     </section>
 
 
-    <section class="news">
-        <h2>📢 お知らせ</h2>
+    <section class="news notice-section">
 
-        <ul>
-            <li>
-                Fire Nearへようこそ。
-            </li>
+        <h2>
+            📢 お知らせ
+        </h2>
 
-            <li>
-                気付いたヒヤリハットは積極的に共有しましょう。
-            </li>
+        <div
+            id="noticeContent"
+            class="notice-loading"
+        >
+            お知らせを読み込み中...
+        </div>
 
-            <li>
-                📌 重要事例を確認してください。
-            </li>
-
-            <li>
-                🔍 検索・絞り込み機能を利用できます。
-            </li>
-
-            <li>
-                📊 統計・CSV出力機能を利用できます。
-            </li>
-        </ul>
     </section>
+
+
+    <div class="admin-link-area">
+
+        <a
+            href="admin.html"
+            class="admin-link"
+        >
+            🔐 管理者ページ
+        </a>
+
+    </div>
 
 </div>
 
 
 <footer>
-    Version 1.1.0
+
+    Version 1.2.2
 
     <br>
 
     Developed by
     coconutswanwanwan-commits
+
 </footer>
 
 
 <script
     type="module"
-    src="home.js?v=110"
+    src="home.js?v=122"
 ></script>
 
 </body>
