@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        ヒヤリハット編集 | 消防ヒヤリハット共有システム
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <style>
+        .edit-status {
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            background: #eef5ff;
+            text-align: center;
+        }
+
+        .edit-error {
+            color: #b71c1c;
+            background: #ffebee;
+        }
+
+        .edit-success {
+            color: #2e7d32;
+            background: #e8f5e9;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .save-button {
+            width: 100%;
+            padding: 17px;
+            border: none;
+            border-radius: 12px;
+            background: #1565c0;
+            color: white;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .save-button:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+        }
+
+        .cancel-link {
+            display: inline-block;
+            margin-top: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>✏️ ヒヤリハット編集</h1>
+
+        <p class="subTitle">
+            管理者専用の編集画面です。
+        </p>
+    </header>
+
+
+    <div
+        id="editStatus"
+        class="edit-status"
+    >
+        管理者権限を確認しています...
+    </div>
+
+
+    <form
+        id="editForm"
+        hidden
+    >
+
+        <section class="news form-section">
+
+            <h2>基本情報</h2>
+
+            <label for="date">
+                発生日
+            </label>
+
+            <input
+                type="date"
+                id="date"
+                required
+            >
+
+
+            <label for="department">
+                所属
+            </label>
+
+            <select
+                id="department"
+                required
+            >
+                <option value="">
+                    選択してください
+                </option>
+
+                <option value="消防本部">
+                    消防本部
+                </option>
+
+                <option value="消防署">
+                    消防署
+                </option>
+
+                <option value="北分署">
+                    北分署
+                </option>
+
+                <option value="南分署">
+                    南分署
+                </option>
+            </select>
+
+
+            <label for="category">
+                業務区分
+            </label>
+
+            <select
+                id="category"
+                required
+            >
+                <option value="">
+                    選択してください
+                </option>
+
+                <option value="予防">予防</option>
+                <option value="査察">査察</option>
+                <option value="救急">救急</option>
+                <option value="救助">救助</option>
+                <option value="警防">警防</option>
+                <option value="消火">消火</option>
+                <option value="通信指令">通信指令</option>
+                <option value="指令">指令</option>
+                <option value="総務">総務</option>
+                <option value="その他">その他</option>
+            </select>
+
+
+            <label for="place">
+                発生場所
+            </label>
+
+            <input
+                type="text"
+                id="place"
+                placeholder="例：車庫、現場、庁舎"
+            >
+
+
+            <label for="level">
+                ヒヤリハットレベル
+            </label>
+
+            <select
+                id="level"
+                required
+            >
+                <option value="レベル1（軽微）">
+                    レベル1（軽微）
+                </option>
+
+                <option value="レベル2（注意）">
+                    レベル2（注意）
+                </option>
+
+                <option value="レベル3（重大）">
+                    レベル3（重大）
+                </option>
+
+                <option value="レベル4（事故寸前）">
+                    レベル4（事故寸前）
+                </option>
+            </select>
+
+        </section>
+
+
+        <section class="news form-section">
+
+            <h2>事例内容</h2>
+
+            <label for="title">
+                タイトル
+            </label>
+
+            <input
+                type="text"
+                id="title"
+                required
+            >
+
+
+            <label for="situation">
+                発生状況
+            </label>
+
+            <textarea
+                id="situation"
+                rows="5"
+            ></textarea>
+
+
+            <label for="cause">
+                原因
+            </label>
+
+            <textarea
+                id="cause"
+                rows="5"
+            ></textarea>
+
+
+            <label for="countermeasure">
+                改善策
+            </label>
+
+            <textarea
+                id="countermeasure"
+                rows="5"
+            ></textarea>
+
+
+            <label for="lesson">
+                この事例から学んだこと
+            </label>
+
+            <textarea
+                id="lesson"
+                rows="5"
+            ></textarea>
+
+        </section>
+
+
+        <section class="news form-section">
+
+            <h2>タグ</h2>
+
+            <label for="tags">
+                タグ
+            </label>
+
+            <input
+                type="text"
+                id="tags"
+                placeholder="例：転倒, 車両, 救急"
+            >
+
+        </section>
+
+
+        <button
+            type="submit"
+            id="saveButton"
+            class="save-button"
+        >
+            💾 変更を保存
+        </button>
+
+    </form>
+
+
+    <div style="text-align:center;">
+
+        <a
+            href="index.html"
+            id="cancelLink"
+            class="cancel-link"
+        >
+            キャンセルしてホームへ戻る
+        </a>
+
+    </div>
+
+
+    <footer>
+        Version 0.8.0
+    </footer>
+
+</div>
+
+
+<script
+    type="module"
+    src="edit.js?v=080"
+></script>
+
+</body>
+
+</html>
