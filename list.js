@@ -29,7 +29,11 @@ async function loadReports() {
 
       reportList.innerHTML += `
         <div class="news">
-          <h3>${data.title}</h3>
+          <h3>
+  <a href="detail.html?id=${doc.id}">
+    ${data.title}
+  </a>
+</h3>
           <p><strong>所属：</strong>${data.department}</p>
           <p><strong>業務区分：</strong>${data.category}</p>
           <p><strong>レベル：</strong>${data.level}</p>
