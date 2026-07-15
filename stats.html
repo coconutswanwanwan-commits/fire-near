@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        統計ダッシュボード | 消防ヒヤリハット共有システム
+    </title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .summary-card h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #444;
+        }
+
+        .summary-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0d47a1;
+        }
+
+        .statistics-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .statistics-section h2 {
+            margin-bottom: 20px;
+        }
+
+        .statistics-row {
+            margin-bottom: 18px;
+        }
+
+        .statistics-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .bar-background {
+            width: 100%;
+            height: 18px;
+            background: #e8edf3;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            min-width: 0;
+            background: #1565c0;
+            border-radius: 10px;
+            transition: width 0.4s;
+        }
+
+        .level-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .level-card {
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .level-card.level1 {
+            background: #d4edda;
+        }
+
+        .level-card.level2 {
+            background: #fff3cd;
+        }
+
+        .level-card.level3 {
+            background: #ffe5b4;
+        }
+
+        .level-card.level4 {
+            background: #f8d7da;
+        }
+
+        .loading-message,
+        .error-message {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .error-message {
+            color: #b71c1c;
+        }
+
+        @media (max-width: 600px) {
+
+            .summary-grid,
+            .level-summary {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+
+        <h1>📊 統計ダッシュボード</h1>
+
+        <p class="subTitle">
+            ヒヤリハットの発生傾向を確認できます。
+        </p>
+
+    </header>
+
+
+    <div
+        id="loadingMessage"
+        class="loading-message"
+    >
+        統計情報を読み込み中...
+    </div>
+
+
+    <main id="statisticsContent" hidden>
+
+        <section class="summary-grid">
+
+            <div class="summary-card">
+
+                <h3>総投稿件数</h3>
+
+                <div
+                    id="totalCount"
+                    class="summary-number"
+                >
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <h3>今月の投稿件数</h3>
+
+                <div
+                    id="monthlyCount"
+                    class="summary-number"
+                >
+                    0
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="statistics-section">
+
+            <h2>⚠️ レベル別件数</h2>
+
+            <div class="level-summary">
+
+                <div class="level-card level1">
+
+                    🟢 レベル1
+
+                    <div id="level1Count">
+                        0件
+                    </div>
+
+                </div>
+
+
+                <div class="level-card level2">
+
+                    🟡 レベル2
+
+                    <div id="level2Count">
+                        0件
+                    </div>
+
+                </div>
+
+
+                <div class="level-card level3">
+
+                    🟠 レベル3
+
+                    <div id="level3Count">
+                        0件
+                    </div>
+
+                </div>
+
+
+                <div class="level-card level4">
+
+                    🔴 レベル4
+
+                    <div id="level4Count">
+                        0件
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="statistics-section">
+
+            <h2>🏢 所属別件数</h2>
+
+            <div id="departmentStatistics"></div>
+
+        </section>
+
+
+        <section class="statistics-section">
+
+            <h2>🚒 業務区分別件数</h2>
+
+            <div id="categoryStatistics"></div>
+
+        </section>
+
+    </main>
+
+
+    <div style="text-align:center; margin-top:20px;">
+
+        <a href="list.html">
+            📚 事例一覧
+        </a>
+
+        ｜
+
+        <a href="index.html">
+            🏠 ホームへ戻る
+        </a>
+
+    </div>
+
+
+    <footer>
+
+        Version 0.3.0
+
+    </footer>
+
+</div>
+
+
+<script
+    type="module"
+    src="stats.js"
+></script>
+
+</body>
+
+</html>
