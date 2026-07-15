@@ -19,57 +19,41 @@
     >
 
     <style>
-        .control-card,
-        .report-section {
-            background: white;
-            border-radius: 15px;
+        .report-controls {
+            margin-bottom: 25px;
             padding: 22px;
-            margin-bottom: 22px;
+            border-radius: 15px;
+            background: white;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
 
-        .control-title,
-        .section-title {
-            margin-bottom: 18px;
-        }
-
-        .status-message {
-            padding: 16px;
-            margin-bottom: 22px;
-            border-radius: 12px;
-            background: #f4f7fb;
-            line-height: 1.7;
-        }
-
-        .error-message {
-            color: #b71c1c;
+        .report-controls label {
+            display: block;
+            margin-bottom: 8px;
             font-weight: bold;
         }
 
-        .control-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
-
-        .control-item label {
-            margin-top: 0;
-        }
-
-        .control-actions {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 18px;
-        }
-
-        .control-button {
+        .report-controls input {
+            box-sizing: border-box;
             width: 100%;
-            padding: 14px 10px;
-            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .report-button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
             color: white;
             font-size: 1rem;
             font-weight: bold;
+            cursor: pointer;
         }
 
         .create-button {
@@ -77,350 +61,211 @@
         }
 
         .print-button {
-            background: #6a1b9a;
+            background: #2e7d32;
         }
 
-        .reset-button {
-            background: #616161;
+        .report-button:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
         }
 
-        .report-heading {
+        .report-status {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            background: #eef5ff;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .report-status.error {
+            background: #ffebee;
+            color: #b71c1c;
+            font-weight: bold;
+        }
+
+        .monthly-report {
+            padding: 28px;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .report-header {
             padding-bottom: 18px;
-            margin-bottom: 22px;
             border-bottom: 3px solid #0d47a1;
             text-align: center;
         }
 
-        .report-heading h2 {
+        .report-header h1 {
+            margin-bottom: 8px;
             color: #0d47a1;
-            font-size: 1.8rem;
+            font-size: 1.7rem;
         }
 
         .report-period {
-            margin-top: 8px;
             font-size: 1.1rem;
             font-weight: bold;
         }
 
-        .report-created-date {
-            margin-top: 7px;
-            color: #555;
-            font-size: 0.9rem;
+        .report-section {
+            margin-top: 28px;
+            break-inside: avoid;
+        }
+
+        .report-section h2 {
+            margin-bottom: 15px;
+            padding-bottom: 7px;
+            border-bottom: 2px solid #90a4ae;
+            color: #263238;
+            font-size: 1.2rem;
         }
 
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
         }
 
         .summary-card {
-            padding: 20px 10px;
-            border-radius: 14px;
-            background: #f4f7fb;
+            padding: 18px;
+            border: 1px solid #cfd8dc;
+            border-radius: 10px;
             text-align: center;
         }
 
         .summary-label {
-            margin-bottom: 8px;
+            margin-bottom: 7px;
             color: #555;
             font-weight: bold;
         }
 
-        .summary-number {
+        .summary-value {
             color: #0d47a1;
             font-size: 2rem;
             font-weight: bold;
         }
 
-        .summary-unit {
-            margin-left: 3px;
-            color: #555;
-            font-size: 0.9rem;
-        }
-
-        .analysis-box {
-            padding: 18px;
-            border-left: 6px solid #1565c0;
-            border-radius: 10px;
-            background: #f4f7fb;
-            line-height: 1.9;
-            white-space: pre-wrap;
-        }
-
-        .chart-list {
-            display: grid;
-            gap: 14px;
-        }
-
-        .chart-row {
-            display: grid;
-            grid-template-columns: minmax(90px, 160px) 1fr 60px;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .chart-label {
-            font-weight: bold;
-            overflow-wrap: anywhere;
-        }
-
-        .chart-track {
-            height: 24px;
-            overflow: hidden;
-            border-radius: 999px;
-            background: #e6ebf1;
-        }
-
-        .chart-bar {
-            height: 100%;
-            min-width: 0;
-            border-radius: 999px;
-            background: #1565c0;
-        }
-
-        .chart-value {
-            text-align: right;
-            font-weight: bold;
-        }
-
-        .level-chart .chart-row:nth-child(1) .chart-bar {
-            background: #43a047;
-        }
-
-        .level-chart .chart-row:nth-child(2) .chart-bar {
-            background: #f9a825;
-        }
-
-        .level-chart .chart-row:nth-child(3) .chart-bar {
-            background: #ef6c00;
-        }
-
-        .level-chart .chart-row:nth-child(4) .chart-bar {
-            background: #c62828;
-        }
-
-        .case-list {
-            display: grid;
-            gap: 15px;
-        }
-
-        .case-item {
-            padding: 18px;
-            border: 1px solid #d9e1ea;
-            border-radius: 13px;
-            background: white;
-            break-inside: avoid;
-        }
-
-        .case-item.featured {
-            border: 2px solid #ef6c00;
-            background: #fffaf3;
-        }
-
-        .case-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .case-title {
-            font-size: 1.1rem;
-            line-height: 1.5;
-        }
-
-        .featured-mark {
-            flex-shrink: 0;
-            padding: 5px 9px;
-            border-radius: 999px;
-            background: #ef6c00;
-            color: white;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .case-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .meta-chip {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 999px;
-            background: #eef3f8;
-            font-size: 0.85rem;
-        }
-
-        .case-description {
-            line-height: 1.8;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .report-table {
+        .statistics-table {
             width: 100%;
-            min-width: 650px;
             border-collapse: collapse;
         }
 
-        .report-table th,
-        .report-table td {
-            padding: 12px 10px;
-            border: 1px solid #d9e1ea;
+        .statistics-table th,
+        .statistics-table td {
+            padding: 10px;
+            border: 1px solid #b0bec5;
             text-align: left;
-            vertical-align: top;
         }
 
-        .report-table th {
-            background: #eef3f8;
-            white-space: nowrap;
+        .statistics-table th {
+            background: #eceff1;
         }
 
-        .empty-message {
-            padding: 28px 15px;
-            border-radius: 12px;
-            background: #f4f7fb;
-            text-align: center;
-            color: #555;
-        }
-
-        .signature-area {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            margin-top: 30px;
-        }
-
-        .signature-box {
-            min-height: 90px;
-            padding: 12px;
-            border: 1px solid #777;
+        .statistics-table td:last-child,
+        .statistics-table th:last-child {
+            width: 90px;
             text-align: center;
         }
 
-        .signature-label {
+        .report-case {
+            margin-bottom: 16px;
+            padding: 15px;
+            border: 1px solid #cfd8dc;
+            border-radius: 10px;
+            break-inside: avoid;
+        }
+
+        .report-case:last-child {
+            margin-bottom: 0;
+        }
+
+        .report-case-title {
+            margin-bottom: 8px;
+            color: #0d47a1;
             font-weight: bold;
         }
 
-        .back-links {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 18px;
-            margin-top: 20px;
+        .important-case {
+            border-left: 6px solid #ef6c00;
+            background: #fff8e1;
         }
 
-        @media (max-width: 700px) {
-            .control-grid,
-            .control-actions {
-                grid-template-columns: 1fr;
-            }
-
-            .summary-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .chart-row {
-                grid-template-columns: 90px 1fr 48px;
-                gap: 8px;
-            }
-
-            .signature-area {
-                grid-template-columns: 1fr;
-            }
-
-            .case-header {
-                flex-direction: column;
-            }
+        .report-case-info {
+            color: #455a64;
+            font-size: 0.92rem;
+            line-height: 1.7;
         }
 
-        @media (max-width: 420px) {
+        .report-case-text {
+            margin-top: 10px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .empty-message {
+            color: #666;
+            text-align: center;
+        }
+
+        .report-footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #b0bec5;
+            color: #666;
+            font-size: 0.85rem;
+            text-align: right;
+        }
+
+        @media (max-width: 600px) {
+            .control-buttons,
             .summary-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .monthly-report {
+                padding: 18px;
             }
         }
 
         @media print {
-            @page {
-                size: A4 portrait;
-                margin: 12mm;
-            }
-
             body {
                 background: white;
-                color: black;
             }
 
             .container {
+                width: 100%;
                 max-width: none;
                 margin: 0;
                 padding: 0;
             }
 
-            body > .container > header,
-            .control-card,
-            .status-message,
-            .back-links,
+            header,
+            .report-controls,
+            .report-status,
+            .page-navigation,
             footer {
                 display: none !important;
             }
 
-            #reportArea {
-                display: block !important;
+            .monthly-report {
+                padding: 0;
+                border-radius: 0;
+                box-shadow: none;
             }
 
             .report-section {
-                padding: 0;
-                margin-bottom: 20px;
-                border-radius: 0;
-                box-shadow: none;
                 break-inside: avoid;
             }
 
-            .report-heading {
-                margin-top: 0;
+            .report-case {
+                break-inside: avoid;
             }
 
-            .summary-card,
-            .analysis-box,
-            .case-item {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            .table-wrapper {
-                overflow: visible;
-            }
-
-            .report-table {
-                min-width: 0;
-                font-size: 0.8rem;
-            }
-
-            .report-table th,
-            .report-table td {
-                padding: 7px 6px;
-            }
-
-            .chart-track,
-            .chart-bar {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            a {
-                color: black;
-                text-decoration: none;
+            @page {
+                size: A4 portrait;
+                margin: 15mm;
             }
         }
     </style>
@@ -431,122 +276,97 @@
 <div class="container">
 
     <header>
-
         <h1>
             📄 月例レポート
         </h1>
 
         <p class="subTitle">
-            月間投稿データを自動集計して印刷・PDF保存
+            Fire Nearの集計結果をPDF・印刷用に表示します。
         </p>
-
     </header>
 
 
     <div
-        id="statusMessage"
-        class="status-message"
+        id="reportStatus"
+        class="report-status"
     >
-        投稿データを読み込んでいます...
+        管理者権限を確認しています...
     </div>
 
 
-    <section class="control-card">
+    <section
+        id="reportControls"
+        class="report-controls"
+        hidden
+    >
+        <label for="reportMonth">
+            集計対象月
+        </label>
 
-        <h2 class="control-title">
-            ⚙️ レポート設定
-        </h2>
+        <input
+            type="month"
+            id="reportMonth"
+            required
+        >
 
-        <div class="control-grid">
-
-            <div class="control-item">
-
-                <label for="monthInput">
-                    集計月
-                </label>
-
-                <input
-                    type="month"
-                    id="monthInput"
-                >
-
-            </div>
-
-
-            <div class="control-item">
-
-                <label for="reportTitleInput">
-                    レポート名
-                </label>
-
-                <input
-                    type="text"
-                    id="reportTitleInput"
-                    value="消防ヒヤリハット月例レポート"
-                    maxlength="100"
-                >
-
-            </div>
-
-        </div>
-
-
-        <div class="control-actions">
+        <div class="control-buttons">
 
             <button
                 type="button"
-                id="createButton"
-                class="control-button create-button"
+                id="createReportButton"
+                class="report-button create-button"
             >
-                レポートを作成
+                📊 レポートを作成
             </button>
 
             <button
                 type="button"
-                id="printButton"
-                class="control-button print-button"
+                id="printReportButton"
+                class="report-button print-button"
+                disabled
             >
-                印刷・PDF保存
-            </button>
-
-            <button
-                type="button"
-                id="currentMonthButton"
-                class="control-button reset-button"
-            >
-                今月を選択
+                📄 PDF作成・印刷
             </button>
 
         </div>
 
+        <p
+            style="
+                margin-top:14px;
+                color:#666;
+                font-size:0.9rem;
+                line-height:1.6;
+            "
+        >
+            集計対象は、投稿フォームで入力した「発生日」です。
+        </p>
     </section>
 
 
     <main
-        id="reportArea"
+        id="monthlyReport"
+        class="monthly-report"
         hidden
     >
+        <div class="report-header">
+
+            <h1>
+                消防ヒヤリハット月例レポート
+            </h1>
+
+            <div
+                id="reportPeriod"
+                class="report-period"
+            ></div>
+
+        </div>
+
 
         <section class="report-section">
 
-            <div class="report-heading">
-
-                <h2 id="reportHeading">
-                    消防ヒヤリハット月例レポート
-                </h2>
-
-                <div
-                    id="reportPeriod"
-                    class="report-period"
-                ></div>
-
-                <div
-                    id="reportCreatedDate"
-                    class="report-created-date"
-                ></div>
-
-            </div>
-
+            <h2>
+                1．集計概要
+            </h2>
 
             <div class="summary-grid">
 
@@ -556,17 +376,11 @@
                         月間投稿件数
                     </div>
 
-                    <div>
-                        <span
-                            id="totalCount"
-                            class="summary-number"
-                        >
-                            0
-                        </span>
-
-                        <span class="summary-unit">
-                            件
-                        </span>
+                    <div
+                        id="monthlyTotalCount"
+                        class="summary-value"
+                    >
+                        0
                     </div>
 
                 </div>
@@ -575,64 +389,14 @@
                 <div class="summary-card">
 
                     <div class="summary-label">
-                        重要事例
+                        重要事例件数
                     </div>
 
-                    <div>
-                        <span
-                            id="featuredCount"
-                            class="summary-number"
-                        >
-                            0
-                        </span>
-
-                        <span class="summary-unit">
-                            件
-                        </span>
-                    </div>
-
-                </div>
-
-
-                <div class="summary-card">
-
-                    <div class="summary-label">
-                        レベル3・4
-                    </div>
-
-                    <div>
-                        <span
-                            id="highRiskCount"
-                            class="summary-number"
-                        >
-                            0
-                        </span>
-
-                        <span class="summary-unit">
-                            件
-                        </span>
-                    </div>
-
-                </div>
-
-
-                <div class="summary-card">
-
-                    <div class="summary-label">
-                        投稿所属数
-                    </div>
-
-                    <div>
-                        <span
-                            id="departmentCount"
-                            class="summary-number"
-                        >
-                            0
-                        </span>
-
-                        <span class="summary-unit">
-                            所属
-                        </span>
+                    <div
+                        id="monthlyFeaturedCount"
+                        class="summary-value"
+                    >
+                        0
                     </div>
 
                 </div>
@@ -644,157 +408,94 @@
 
         <section class="report-section">
 
-            <h2 class="section-title">
-                1．月間概要
+            <h2>
+                2．レベル別件数
             </h2>
 
-            <div
-                id="analysisText"
-                class="analysis-box"
-            ></div>
+            <div id="levelReport"></div>
 
         </section>
 
 
         <section class="report-section">
 
-            <h2 class="section-title">
-                2．レベル別集計
+            <h2>
+                3．所属別件数
             </h2>
 
-            <div
-                id="levelChart"
-                class="chart-list level-chart"
-            ></div>
+            <div id="departmentReport"></div>
 
         </section>
 
 
         <section class="report-section">
 
-            <h2 class="section-title">
-                3．所属別集計
+            <h2>
+                4．業務区分別件数
             </h2>
 
-            <div
-                id="departmentChart"
-                class="chart-list"
-            ></div>
+            <div id="categoryReport"></div>
 
         </section>
 
 
         <section class="report-section">
 
-            <h2 class="section-title">
-                4．重要事例
+            <h2>
+                5．重要事例
             </h2>
 
-            <div
-                id="featuredCaseList"
-                class="case-list"
-            ></div>
+            <div id="featuredCaseReport"></div>
 
         </section>
 
 
         <section class="report-section">
 
-            <h2 class="section-title">
-                5．レベル3・4事例
+            <h2>
+                6．参考になった事例 TOP5
             </h2>
 
-            <div
-                id="highRiskCaseList"
-                class="case-list"
-            ></div>
+            <div id="popularCaseReport"></div>
 
         </section>
 
 
         <section class="report-section">
 
-            <h2 class="section-title">
-                6．月間投稿一覧
+            <h2>
+                7．月間事例一覧
             </h2>
 
-            <div class="table-wrapper">
-
-                <table class="report-table">
-
-                    <thead>
-
-                    <tr>
-                        <th>
-                            日時
-                        </th>
-
-                        <th>
-                            タイトル
-                        </th>
-
-                        <th>
-                            所属
-                        </th>
-
-                        <th>
-                            レベル
-                        </th>
-
-                        <th>
-                            重要
-                        </th>
-                    </tr>
-
-                    </thead>
-
-                    <tbody id="reportTableBody"></tbody>
-
-                </table>
-
-            </div>
-
-
-            <div class="signature-area">
-
-                <div class="signature-box">
-
-                    <div class="signature-label">
-                        作成
-                    </div>
-
-                </div>
-
-
-                <div class="signature-box">
-
-                    <div class="signature-label">
-                        確認
-                    </div>
-
-                </div>
-
-
-                <div class="signature-box">
-
-                    <div class="signature-label">
-                        承認
-                    </div>
-
-                </div>
-
-            </div>
+            <div id="allCaseReport"></div>
 
         </section>
+
+
+        <div
+            id="generatedInformation"
+            class="report-footer"
+        ></div>
 
     </main>
 
 
-    <div class="back-links">
+    <div
+        class="page-navigation"
+        style="text-align:center; margin-top:20px;"
+    >
 
         <a href="admin.html">
-            👨‍💼 管理画面へ戻る
+            ← 管理ダッシュボードへ戻る
         </a>
+
+        ｜
+
+        <a href="stats.html">
+            📊 統計画面
+        </a>
+
+        ｜
 
         <a href="index.html">
             🏠 ホームへ戻る
