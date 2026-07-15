@@ -1,350 +1,629 @@
-import {
+from pathlib import Path
+
+code = r'''import {
+
   db,
+
   auth
+
 } from "./firebase.js";
 
 import {
+
   collection,
+
   getDocs,
+
   doc,
+
   getDoc
+
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 import {
+
   GoogleAuthProvider,
+
   signInWithPopup,
-  signOut,
-  onAuthStateChanged
+
+  signInWithRedirect,
+
+  getRedirectResult,
+
+  onAuthStateChanged,
+
+  signOut
+
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
-
 const loginSection =
+
   document.getElementById("loginSection");
 
 const loginButton =
+
   document.getElementById("loginButton");
 
 const logoutButton =
+
   document.getElementById("logoutButton");
 
 const loginStatus =
+
   document.getElementById("loginStatus");
 
 const dashboard =
+
   document.getElementById("dashboard");
 
 const userName =
+
   document.getElementById("userName");
 
 const userEmail =
+
   document.getElementById("userEmail");
 
 const totalReportCount =
+
   document.getElementById("totalReportCount");
 
 const featuredReportCount =
+
   document.getElementById("featuredReportCount");
 
+const provider =
 
-const googleProvider =
   new GoogleAuthProvider();
 
+provider.setCustomParameters({
 
-googleProvider.setCustomParameters({
   prompt: "select_account"
+
 });
 
+let authCheckStarted = false;
 
-// 状態メッセージ
-function showLoginStatus(
+// 状態メッセージを表示
+
+function showStatus(
+
   message,
+
   type = ""
+
 ) {
+
   loginStatus.textContent =
+
     message;
 
   loginStatus.className =
+
     "login-status";
 
-  if (type === "success") {
-    loginStatus.classList.add(
-      "success-message"
-    );
+  if (type) {
+
+    loginStatus.classList.add(type);
+
   }
 
-  if (type === "error") {
-    loginStatus.classList.add(
-      "error-message"
-    );
-  }
 }
 
+// ログイン前画面へ戻す
 
-// 管理者権限確認
+function showLoggedOutScreen(
+
+  message =
+
+    "管理者用Googleアカウントでログインしてください。"
+
+) {
+
+  dashboard.hidden =
+
+    true;
+
+  loginSection.hidden =
+
+    false;
+
+  loginButton.disabled =
+
+    false;
+
+  logoutButton.disabled =
+
+    false;
+
+  totalReportCount.textContent =
+
+    "-";
+
+  featuredReportCount.textContent =
+
+    "-";
+
+  userName.textContent =
+
+    "";
+
+  userEmail.textContent =
+
+    "";
+
+  showStatus(
+
+    message
+
+  );
+
+}
+
+// 管理者ダッシュボードを表示
+
+function showDashboard(user) {
+
+  loginSection.hidden =
+
+    true;
+
+  dashboard.hidden =
+
+    false;
+
+  userName.textContent =
+
+    user.displayName ||
+
+    "名前未設定";
+
+  userEmail.textContent =
+
+    user.email ||
+
+    "メールアドレス未設定";
+
+}
+
+// Firestoreのadmins/{uid}で管理者権限を確認
+
 async function checkAdmin(user) {
+
   if (!user) {
+
     return false;
+
   }
 
   const adminReference =
+
     doc(
+
       db,
+
       "admins",
+
       user.uid
+
     );
 
   const adminSnapshot =
+
     await getDoc(
+
       adminReference
+
     );
 
   return adminSnapshot.exists();
+
 }
 
+// 投稿件数を読み込む
 
-// 管理画面の件数を読み込む
-async function loadDashboardStatistics() {
+async function loadSummary() {
+
   totalReportCount.textContent =
+
     "読込中";
 
   featuredReportCount.textContent =
+
     "読込中";
 
   try {
+
     const snapshot =
+
       await getDocs(
+
         collection(
+
           db,
+
           "reports"
+
         )
+
       );
 
-    const reports =
-      snapshot.docs.map(
-        (document) => ({
-          id: document.id,
-          ...document.data()
-        })
-      );
+    let featuredCount = 0;
+
+    snapshot.forEach((reportDocument) => {
+
+      const report =
+
+        reportDocument.data();
+
+      if (report.featured === true) {
+
+        featuredCount += 1;
+
+      }
+
+    });
 
     totalReportCount.textContent =
-      `${reports.length}件`;
 
-    const featuredCount =
-      reports.filter(
-        (report) =>
-          report.featured === true
-      ).length;
+      `${snapshot.size}件`;
 
     featuredReportCount.textContent =
+
       `${featuredCount}件`;
 
   } catch (error) {
+
     console.error(
-      "管理ダッシュボード集計エラー:",
+
+      "管理画面集計読み込みエラー:",
+
       error
+
     );
 
     totalReportCount.textContent =
+
       "取得失敗";
 
     featuredReportCount.textContent =
+
       "取得失敗";
+
+    showStatus(
+
+      "ログインできましたが、投稿件数の取得に失敗しました。",
+
+      "error-message"
+
+    );
+
   }
+
 }
 
+// ログイン処理
 
-// Googleログイン
-async function loginWithGoogle() {
+async function login() {
+
   loginButton.disabled =
+
     true;
 
-  loginButton.textContent =
-    "ログイン処理中...";
+  showStatus(
 
-  showLoginStatus(
     "Googleログイン画面を開いています..."
+
   );
 
   try {
+
     await signInWithPopup(
+
       auth,
-      googleProvider
+
+      provider
+
     );
 
   } catch (error) {
+
     console.error(
+
       "Googleログインエラー:",
+
       error
+
     );
 
-    switch (error.code) {
-      case "auth/popup-closed-by-user":
-        showLoginStatus(
-          "ログイン画面が閉じられました。",
-          "error"
-        );
-        break;
+    const redirectErrorCodes = [
 
-      case "auth/popup-blocked":
-        showLoginStatus(
-          "ポップアップがブロックされました。Safariの設定を確認してください。",
-          "error"
-        );
-        break;
+      "auth/popup-blocked",
 
-      case "auth/unauthorized-domain":
-        showLoginStatus(
-          "このドメインはFirebaseで許可されていません。",
-          "error"
-        );
-        break;
+      "auth/cancelled-popup-request",
 
-      default:
-        showLoginStatus(
-          `ログインに失敗しました：${error.message}`,
-          "error"
-        );
-    }
+      "auth/operation-not-supported-in-this-environment"
 
-    loginButton.disabled =
-      false;
+    ];
 
-    loginButton.textContent =
-      "Googleアカウントでログイン";
-  }
-}
+    if (
 
+      redirectErrorCodes.includes(
 
-// ログアウト
-async function logout() {
-  logoutButton.disabled =
-    true;
+        error.code
 
-  logoutButton.textContent =
-    "ログアウト中...";
+      )
 
-  try {
-    await signOut(auth);
+    ) {
 
-  } catch (error) {
-    console.error(
-      "ログアウトエラー:",
-      error
-    );
+      showStatus(
 
-    window.alert(
-      "ログアウトに失敗しました。"
-    );
+        "ログイン画面へ移動します..."
 
-    logoutButton.disabled =
-      false;
+      );
 
-    logoutButton.textContent =
-      "ログアウト";
-  }
-}
+      await signInWithRedirect(
 
+        auth,
 
-// ログイン状態を監視
-onAuthStateChanged(
-  auth,
-  async (user) => {
+        provider
 
-    dashboard.hidden =
-      true;
-
-    loginSection.hidden =
-      false;
-
-    if (!user) {
-      loginButton.hidden =
-        false;
-
-      loginButton.disabled =
-        false;
-
-      loginButton.textContent =
-        "Googleアカウントでログイン";
-
-      showLoginStatus(
-        "ログインしていません。"
       );
 
       return;
+
     }
 
-    showLoginStatus(
-      "管理者権限を確認しています..."
+    loginButton.disabled =
+
+      false;
+
+    if (
+
+      error.code ===
+
+      "auth/popup-closed-by-user"
+
+    ) {
+
+      showStatus(
+
+        "ログインはキャンセルされました。"
+
+      );
+
+      return;
+
+    }
+
+    showStatus(
+
+      "Googleログインに失敗しました。もう一度お試しください。",
+
+      "error-message"
+
     );
 
-    try {
-      const isAdmin =
-        await checkAdmin(user);
-
-      if (!isAdmin) {
-        showLoginStatus(
-          "このGoogleアカウントには管理者権限がありません。",
-          "error"
-        );
-
-        loginButton.hidden =
-          true;
-
-        window.setTimeout(
-          async () => {
-            await signOut(auth);
-          },
-          1500
-        );
-
-        return;
-      }
-
-      userName.textContent =
-        user.displayName ||
-        "名前未設定";
-
-      userEmail.textContent =
-        user.email ||
-        "メール未設定";
-
-      loginSection.hidden =
-        true;
-
-      dashboard.hidden =
-        false;
-
-      logoutButton.disabled =
-        false;
-
-      logoutButton.textContent =
-        "ログアウト";
-
-      await loadDashboardStatistics();
-
-    } catch (error) {
-      console.error(
-        "管理者確認エラー:",
-        error
-      );
-
-      showLoginStatus(
-        "管理者権限の確認に失敗しました。",
-        "error"
-      );
-    }
   }
-);
 
+}
+
+// ログアウト処理
+
+async function logout() {
+
+  logoutButton.disabled =
+
+    true;
+
+  try {
+
+    await signOut(auth);
+
+  } catch (error) {
+
+    console.error(
+
+      "ログアウトエラー:",
+
+      error
+
+    );
+
+    logoutButton.disabled =
+
+      false;
+
+    showStatus(
+
+      "ログアウトに失敗しました。",
+
+      "error-message"
+
+    );
+
+  }
+
+}
+
+// ログイン状態を処理
+
+async function handleAuthState(user) {
+
+  if (authCheckStarted) {
+
+    return;
+
+  }
+
+  authCheckStarted =
+
+    true;
+
+  dashboard.hidden =
+
+    true;
+
+  loginButton.disabled =
+
+    true;
+
+  showStatus(
+
+    "管理者権限を確認しています..."
+
+  );
+
+  try {
+
+    if (!user) {
+
+      showLoggedOutScreen();
+
+      return;
+
+    }
+
+    const isAdmin =
+
+      await checkAdmin(user);
+
+    if (!isAdmin) {
+
+      await signOut(auth);
+
+      showLoggedOutScreen(
+
+        "このGoogleアカウントには管理者権限がありません。"
+
+      );
+
+      loginStatus.classList.add(
+
+        "error-message"
+
+      );
+
+      return;
+
+    }
+
+    showDashboard(user);
+
+    showStatus(
+
+      "管理者としてログインしています。",
+
+      "success-message"
+
+    );
+
+    await loadSummary();
+
+  } catch (error) {
+
+    console.error(
+
+      "管理者権限確認エラー:",
+
+      error
+
+    );
+
+    dashboard.hidden =
+
+      true;
+
+    loginSection.hidden =
+
+      false;
+
+    loginButton.disabled =
+
+      false;
+
+    showStatus(
+
+      "管理者権限の確認に失敗しました。Firestoreのadmins設定と通信状態を確認してください。",
+
+      "error-message"
+
+    );
+
+  } finally {
+
+    authCheckStarted =
+
+      false;
+
+  }
+
+}
+
+// リダイレクトログインの結果を確認
+
+async function checkRedirectLoginResult() {
+
+  try {
+
+    await getRedirectResult(auth);
+
+  } catch (error) {
+
+    console.error(
+
+      "リダイレクトログインエラー:",
+
+      error
+
+    );
+
+    loginButton.disabled =
+
+      false;
+
+    showStatus(
+
+      "Googleログインに失敗しました。もう一度お試しください。",
+
+      "error-message"
+
+    );
+
+  }
+
+}
 
 loginButton.addEventListener(
-  "click",
-  loginWithGoogle
-);
 
+  "click",
+
+  login
+
+);
 
 logoutButton.addEventListener(
+
   "click",
+
   logout
+
 );
+
+onAuthStateChanged(
+
+  auth,
+
+  handleAuthState
+
+);
+
+checkRedirectLoginResult();
+
+'''
+
+path = Path("/mnt/data/admin.js")
+
+path.write_text(code, encoding="utf-8")
+
+print(f"Created {path} ({len(code.splitlines())} lines)")
