@@ -19,6 +19,87 @@
         href="style.css"
     >
 
+    <style>
+
+        .ranking-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-number {
+            min-width: 42px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .ranking-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ranking-title {
+            display: block;
+            color: #0d47a1;
+            font-size: 1.05rem;
+            font-weight: bold;
+            text-decoration: none;
+            overflow-wrap: anywhere;
+        }
+
+        .ranking-title:hover {
+            text-decoration: underline;
+        }
+
+        .ranking-info {
+            margin-top: 5px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .ranking-helpful {
+            min-width: 78px;
+            padding: 7px 10px;
+            border-radius: 20px;
+            background: #eef5ff;
+            color: #0d47a1;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .ranking-message {
+            padding: 15px 0;
+            color: #666;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+
+            .ranking-item {
+                align-items: flex-start;
+            }
+
+            .ranking-helpful {
+                min-width: auto;
+                font-size: 0.85rem;
+            }
+
+        }
+
+    </style>
+
 </head>
 
 <body>
@@ -107,6 +188,22 @@
     <section class="news">
 
         <h2>
+            🏆 人気事例 TOP5
+        </h2>
+
+        <div
+            id="popularReports"
+            class="ranking-message"
+        >
+            読み込み中...
+        </div>
+
+    </section>
+
+
+    <section class="news">
+
+        <h2>
             📢 お知らせ
         </h2>
 
@@ -136,6 +233,10 @@
                 👍 参考になった機能を利用できます。
             </li>
 
+            <li>
+                🏆 人気事例ランキングを追加しました。
+            </li>
+
         </ul>
 
     </section>
@@ -145,7 +246,7 @@
 
 <footer>
 
-    Version 0.5.2
+    Version 0.6.0
 
     <br>
 
@@ -157,7 +258,7 @@
 
 <script
     type="module"
-    src="home.js?v=052"
+    src="home.js?v=060"
 ></script>
 
 </body>
