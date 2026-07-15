@@ -3,80 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ヒヤリハット一覧 | Fire Near</title>
+
+    <title>ヒヤリハット一覧 | 消防ヒヤリハット共有システム</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <div class="container">
 
 <header>
     <h1>📚 ヒヤリハット一覧</h1>
-    <p class="subTitle">投稿されたヒヤリハット事例です。</p>
+
+    <p class="subTitle">
+        投稿されたヒヤリハット事例です。
+    </p>
 </header>
 
-<section class="news">
-
-<h2>🔍 検索・絞り込み</h2>
-
-<p>キーワード</p>
-<input
-    type="text"
-    id="searchBox"
-    placeholder="タイトル・内容・原因などを検索">
-
-<p>所属</p>
-<select id="departmentFilter">
-    <option value="">すべて</option>
-    <option>消防本部</option>
-    <option>消防署</option>
-    <option>北分署</option>
-    <option>南分署</option>
-</select>
-
-<p>業務区分</p>
-<select id="categoryFilter">
-    <option value="">すべて</option>
-    <option>消火</option>
-    <option>救助</option>
-    <option>救急</option>
-    <option>予防</option>
-    <option>査察</option>
-    <option>指令</option>
-    <option>その他</option>
-</select>
-
-<p>レベル</p>
-<select id="levelFilter">
-    <option value="">すべて</option>
-    <option>レベル1（軽微）</option>
-    <option>レベル2（注意）</option>
-    <option>レベル3（重大）</option>
-    <option>レベル4（事故寸前）</option>
-</select>
-
-</section>
 
 <section class="news">
 
-<div id="reportList">
-    読み込み中...
-</div>
+    <h2>🔍 検索・絞り込み</h2>
+
+    <label for="searchBox">
+        キーワード
+    </label>
+
+    <input
+        type="search"
+        id="searchBox"
+        placeholder="タイトル・内容・原因・タグなどを検索"
+    >
+
+
+    <label for="departmentFilter">
+        所属
+    </label>
+
+    <select id="departmentFilter">
+
+        <option value="">すべての所属</option>
+
+        <option value="消防本部">消防本部</option>
+
+        <option value="消防署">消防署</option>
+
+        <option value="北分署">北分署</option>
+
+        <option value="南分署">南分署</option>
+
+    </select>
+
+
+    <label for="categoryFilter">
+        業務区分
+    </label>
+
+    <select id="categoryFilter">
+
+        <option value="">すべての業務区分</option>
+
+        <option value="予防">予防</option>
+
+        <option value="査察">査察</option>
+
+        <option value="救急">救急</option>
+
+        <option value="救助">救助</option>
+
+        <option value="警防">警防</option>
+
+        <option value="消火">消火</option>
+
+        <option value="通信指令">通信指令</option>
+
+        <option value="指令">指令</option>
+
+        <option value="総務">総務</option>
+
+        <option value="その他">その他</option>
+
+    </select>
+
+
+    <label for="levelFilter">
+        ヒヤリハットレベル
+    </label>
+
+    <select id="levelFilter">
+
+        <option value="">すべてのレベル</option>
+
+        <option value="レベル1（軽微）">
+            レベル1（軽微）
+        </option>
+
+        <option value="レベル2（注意）">
+            レベル2（注意）
+        </option>
+
+        <option value="レベル3（重大）">
+            レベル3（重大）
+        </option>
+
+        <option value="レベル4（事故寸前）">
+            レベル4（事故寸前）
+        </option>
+
+    </select>
+
+
+    <div style="text-align:center; margin-top:20px;">
+
+        <button
+            type="button"
+            id="resetFilters"
+            class="menuButton"
+        >
+            🔄 絞り込みを解除
+        </button>
+
+    </div>
 
 </section>
+
+
+<section class="news">
+
+    <p id="resultCount">
+        読み込み中...
+    </p>
+
+    <div id="reportList">
+        読み込み中...
+    </div>
+
+</section>
+
 
 <div style="text-align:center; margin-top:20px;">
-    <a href="post.html">📝 新規投稿</a> |
-    <a href="index.html">🏠 ホームへ戻る</a>
+
+    <a href="post.html">
+        📝 新規投稿
+    </a>
+
+    ｜
+    
+    <a href="index.html">
+        🏠 ホームへ戻る
+    </a>
+
 </div>
 
+
 <footer>
-Version 0.2.3
+
+    Version 0.2.3
+
 </footer>
 
 </div>
 
-<script type="module" src="firebase.js"></script>
+
 <script type="module" src="list.js"></script>
 
 </body>
