@@ -7,6 +7,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  deleteDoc,
   increment
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
@@ -45,8 +46,15 @@ const adminActions =
 const editButton =
   document.getElementById("editButton");
 
+const deleteButton =
+  document.getElementById("deleteButton");
+
+const deleteMessage =
+  document.getElementById("deleteMessage");
+
 
 let currentHelpfulCount = 0;
+let currentUserIsAdmin = false;
 
 
 // HTMLへ安全に表示
@@ -136,6 +144,9 @@ onAuthStateChanged(
     adminActions.hidden =
       true;
 
+    currentUserIsAdmin =
+      false;
+
     if (
       !user ||
       !reportId
@@ -150,6 +161,9 @@ onAuthStateChanged(
       if (!isAdmin) {
         return;
       }
+
+      currentUserIsAdmin =
+        true;
 
       editButton.href =
         `edit.html?id=${encodeURIComponent(reportId)}`;
@@ -381,9 +395,94 @@ async function sendHelpful() {
 }
 
 
+// 削除処理
+async function deleteReport() {
+  if (
+    !reportId ||
+    !currentUserIsAdmin
+  ) {
+    deleteMessage.textContent =
+      "管理者権限を確認できません。";
+
+    return;
+  }
+
+  const firstConfirm =
+    window.confirm(
+      "この事例を削除しますか？\nこの操作は取り消せません。"
+    );
+
+  if (!firstConfirm) {
+    return;
+  }
+
+  const secondConfirm =
+    window.confirm(
+      "本当に削除してよろしいですか？"
+    );
+
+  if (!secondConfirm) {
+    return;
+  }
+
+  deleteButton.disabled =
+    true;
+
+  deleteButton.textContent =
+    "削除中...";
+
+  deleteMessage.textContent =
+    "";
+
+  try {
+    const reportReference =
+      doc(
+        db,
+        "reports",
+        reportId
+      );
+
+    await deleteDoc(
+      reportReference
+    );
+
+    localStorage.removeItem(
+      getHelpfulStorageKey()
+    );
+
+    window.alert(
+      "事例を削除しました。"
+    );
+
+    window.location.href =
+      "cases.html";
+
+  } catch (error) {
+    console.error(
+      "削除エラー:",
+      error
+    );
+
+    deleteMessage.textContent =
+      "削除に失敗しました。管理者権限とFirestoreルールを確認してください。";
+
+    deleteButton.disabled =
+      false;
+
+    deleteButton.textContent =
+      "🗑 この事例を削除する";
+  }
+}
+
+
 helpfulButton.addEventListener(
   "click",
   sendHelpful
+);
+
+deleteButton.addEventListener(
+  "click",
+  deleteReport
 );
 
 
