@@ -2,7 +2,6 @@
 <html lang="ja">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -20,6 +19,33 @@
     >
 
     <style>
+        .featured-section {
+            border: 2px solid #ef6c00;
+            background: #fff8e1;
+        }
+
+        .featured-card {
+            padding: 15px 0;
+            border-bottom: 1px solid #ffcc80;
+        }
+
+        .featured-card:last-child {
+            border-bottom: none;
+        }
+
+        .featured-title {
+            display: block;
+            margin-bottom: 8px;
+            color: #e65100;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .featured-info {
+            color: #555;
+            line-height: 1.7;
+        }
 
         .ranking-list {
             list-style: none;
@@ -53,14 +79,8 @@
         .ranking-title {
             display: block;
             color: #0d47a1;
-            font-size: 1.05rem;
             font-weight: bold;
             text-decoration: none;
-            overflow-wrap: anywhere;
-        }
-
-        .ranking-title:hover {
-            text-decoration: underline;
         }
 
         .ranking-info {
@@ -70,13 +90,11 @@
         }
 
         .ranking-helpful {
-            min-width: 78px;
             padding: 7px 10px;
             border-radius: 20px;
             background: #eef5ff;
             color: #0d47a1;
             font-weight: bold;
-            text-align: center;
         }
 
         .ranking-message {
@@ -84,22 +102,7 @@
             color: #666;
             text-align: center;
         }
-
-        @media (max-width: 600px) {
-
-            .ranking-item {
-                align-items: flex-start;
-            }
-
-            .ranking-helpful {
-                min-width: auto;
-                font-size: 0.85rem;
-            }
-
-        }
-
     </style>
-
 </head>
 
 <body>
@@ -107,7 +110,6 @@
 <div class="container">
 
     <header>
-
         <h1>
             🚒 消防ヒヤリハット共有システム
         </h1>
@@ -115,15 +117,23 @@
         <p class="subTitle">
             Fire Near
         </p>
-
     </header>
 
 
-    <section class="today">
+    <section
+        class="news featured-section"
+        id="featuredSection"
+    >
+        <h2>📌 重要事例</h2>
 
-        <h2>
-            本日の投稿件数
-        </h2>
+        <div id="featuredReports">
+            読み込み中...
+        </div>
+    </section>
+
+
+    <section class="today">
+        <h2>本日の投稿件数</h2>
 
         <div
             class="count"
@@ -134,19 +144,12 @@
 
         <p
             id="todayCountMessage"
-            style="
-                margin-top:8px;
-                color:#666;
-                font-size:0.9rem;
-            "
-        >
-        </p>
-
+            style="margin-top:8px; color:#666; font-size:0.9rem;"
+        ></p>
     </section>
 
 
     <nav>
-
         <a
             href="post.html"
             class="menuButton"
@@ -154,7 +157,6 @@
             📝<br>
             投稿する
         </a>
-
 
         <a
             href="cases.html"
@@ -164,7 +166,6 @@
             事例を見る
         </a>
 
-
         <a
             href="list.html"
             class="menuButton"
@@ -173,7 +174,6 @@
             検索する
         </a>
 
-
         <a
             href="stats.html"
             class="menuButton"
@@ -181,15 +181,11 @@
             📊<br>
             統計を見る
         </a>
-
     </nav>
 
 
     <section class="news">
-
-        <h2>
-            🏆 人気事例 TOP5
-        </h2>
+        <h2>🏆 人気事例 TOP5</h2>
 
         <div
             id="popularReports"
@@ -197,18 +193,13 @@
         >
             読み込み中...
         </div>
-
     </section>
 
 
     <section class="news">
-
-        <h2>
-            📢 お知らせ
-        </h2>
+        <h2>📢 お知らせ</h2>
 
         <ul>
-
             <li>
                 Fire Nearへようこそ。
             </li>
@@ -218,7 +209,7 @@
             </li>
 
             <li>
-                📚 事例一覧と検索画面を分けました。
+                📌 重要事例を確認してください。
             </li>
 
             <li>
@@ -228,37 +219,25 @@
             <li>
                 📊 統計・CSV出力機能を利用できます。
             </li>
-
-            <li>
-                👍 参考になった機能を利用できます。
-            </li>
-
-            <li>
-                🏆 人気事例ランキングを追加しました。
-            </li>
-
         </ul>
-
     </section>
 
 </div>
 
 
 <footer>
-
-    Version 0.6.0
+    Version 1.1.0
 
     <br>
 
     Developed by
     coconutswanwanwan-commits
-
 </footer>
 
 
 <script
     type="module"
-    src="home.js?v=060"
+    src="home.js?v=110"
 ></script>
 
 </body>
