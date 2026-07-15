@@ -15,6 +15,12 @@ const todayCountMessage =
 const popularReports =
   document.getElementById("popularReports");
 
+const featuredReports =
+  document.getElementById("featuredReports");
+
+const featuredSection =
+  document.getElementById("featuredSection");
+
 
 // HTMLへ安全に表示
 function escapeHtml(value) {
@@ -27,7 +33,7 @@ function escapeHtml(value) {
 }
 
 
-// Firestore TimestampをDateへ変換
+// TimestampをDateへ変換
 function convertToDate(value) {
   if (!value) {
     return null;
@@ -37,23 +43,19 @@ function convertToDate(value) {
     return value.toDate();
   }
 
-  const convertedDate =
+  const date =
     new Date(value);
 
-  if (
-    Number.isNaN(
-      convertedDate.getTime()
-    )
-  ) {
-    return null;
-  }
-
-  return convertedDate;
+  return Number.isNaN(
+    date.getTime()
+  )
+    ? null
+    : date;
 }
 
 
-// Firestore Timestampを比較用数値へ変換
-function getCreatedAtNumber(value) {
+// 比較用数値
+function getDateNumber(value) {
   const date =
     convertToDate(value);
 
@@ -63,25 +65,25 @@ function getCreatedAtNumber(value) {
 }
 
 
-// 順位表示
+// 順位マーク
 function getRankingMark(index) {
-  switch (index) {
-    case 0:
-      return "🥇";
-
-    case 1:
-      return "🥈";
-
-    case 2:
-      return "🥉";
-
-    default:
-      return `${index + 1}位`;
+  if (index === 0) {
+    return "🥇";
   }
+
+  if (index === 1) {
+    return "🥈";
+  }
+
+  if (index === 2) {
+    return "🥉";
+  }
+
+  return `${index + 1}位`;
 }
 
 
-// 実際の投稿日を基準に本日の件数を表示
+// 本日の投稿件数
 function displayTodayCount(reports) {
   const startOfToday =
     new Date();
@@ -93,14 +95,12 @@ function displayTodayCount(reports) {
     0
   );
 
-
   const startOfTomorrow =
     new Date(startOfToday);
 
   startOfTomorrow.setDate(
     startOfTomorrow.getDate() + 1
   );
-
 
   const count =
     reports.filter((report) => {
@@ -109,91 +109,138 @@ function displayTodayCount(reports) {
           report.createdAt
         );
 
-      if (!createdDate) {
-        return false;
-      }
-
       return (
+        createdDate &&
         createdDate >= startOfToday &&
         createdDate < startOfTomorrow
       );
     }).length;
 
-
   todayCount.textContent =
     `${count}件`;
 
-
-  if (count === 0) {
-    todayCountMessage.textContent =
-      "本日の投稿はまだありません。";
-  } else {
-    todayCountMessage.textContent =
-      "本日、新しい事例が共有されています。";
-  }
+  todayCountMessage.textContent =
+    count === 0
+      ? "本日の投稿はまだありません。"
+      : "本日、新しい事例が共有されています。";
 }
 
 
-// 人気事例を表示
+// 重要事例
+function displayFeaturedReports(reports) {
+  const featured =
+    reports
+      .filter((report) =>
+        report.featured === true
+      )
+      .sort((first, second) => {
+        const firstDate =
+          getDateNumber(
+            first.featuredAt
+          ) ||
+          getDateNumber(
+            first.createdAt
+          );
+
+        const secondDate =
+          getDateNumber(
+            second.featuredAt
+          ) ||
+          getDateNumber(
+            second.createdAt
+          );
+
+        return secondDate - firstDate;
+      })
+      .slice(0, 5);
+
+  if (featured.length === 0) {
+    featuredSection.hidden = true;
+    return;
+  }
+
+  featuredSection.hidden = false;
+
+  featuredReports.innerHTML =
+    featured
+      .map((report) => `
+        <article class="featured-card">
+
+          <a
+            class="featured-title"
+            href="detail.html?id=${encodeURIComponent(report.id)}"
+          >
+            📌 ${escapeHtml(
+              report.title || "タイトル未設定"
+            )}
+          </a>
+
+          <div class="featured-info">
+
+            <strong>所属：</strong>
+            ${escapeHtml(
+              report.department || "未設定"
+            )}
+
+            <br>
+
+            <strong>業務区分：</strong>
+            ${escapeHtml(
+              report.category || "未設定"
+            )}
+
+            <br>
+
+            <strong>レベル：</strong>
+            ${escapeHtml(
+              report.level || "未設定"
+            )}
+
+          </div>
+
+        </article>
+      `)
+      .join("");
+}
+
+
+// 人気ランキング
 function displayPopularReports(reports) {
   const ranking =
     [...reports]
-
-      .filter((report) => {
-        return Number(
-          report.helpful || 0
-        ) > 0;
-      })
-
+      .filter((report) =>
+        Number(report.helpful || 0) > 0
+      )
       .sort((first, second) => {
-        const helpfulDifference =
-          Number(
-            second.helpful || 0
-          ) -
-          Number(
-            first.helpful || 0
-          );
+        const difference =
+          Number(second.helpful || 0) -
+          Number(first.helpful || 0);
 
-        if (
-          helpfulDifference !== 0
-        ) {
-          return helpfulDifference;
+        if (difference !== 0) {
+          return difference;
         }
 
         return (
-          getCreatedAtNumber(
-            second.createdAt
-          ) -
-          getCreatedAtNumber(
-            first.createdAt
-          )
+          getDateNumber(second.createdAt) -
+          getDateNumber(first.createdAt)
         );
       })
-
       .slice(0, 5);
 
-
   if (ranking.length === 0) {
-    popularReports.className =
-      "ranking-message";
-
     popularReports.innerHTML =
       "まだ「参考になった」が送信された事例はありません。";
 
     return;
   }
 
+  popularReports.className = "";
 
-  const rankingHtml =
-    ranking
+  popularReports.innerHTML = `
+    <ol class="ranking-list">
 
-      .map((report, index) => {
-        const helpful =
-          Number(
-            report.helpful || 0
-          );
-
-        return `
+      ${ranking
+        .map((report, index) => `
           <li class="ranking-item">
 
             <div class="ranking-number">
@@ -207,49 +254,38 @@ function displayPopularReports(reports) {
                 href="detail.html?id=${encodeURIComponent(report.id)}"
               >
                 ${escapeHtml(
-                  report.title ||
-                  "タイトル未設定"
+                  report.title || "タイトル未設定"
                 )}
               </a>
 
               <div class="ranking-info">
                 ${escapeHtml(
-                  report.department ||
-                  "所属未設定"
+                  report.department || "所属未設定"
                 )}
 
                 ／
 
                 ${escapeHtml(
-                  report.category ||
-                  "業務区分未設定"
+                  report.category || "業務区分未設定"
                 )}
               </div>
 
             </div>
 
             <div class="ranking-helpful">
-              👍 ${helpful}
+              👍 ${Number(report.helpful || 0)}
             </div>
 
           </li>
-        `;
-      })
+        `)
+        .join("")}
 
-      .join("");
-
-
-  popularReports.className = "";
-
-  popularReports.innerHTML = `
-    <ol class="ranking-list">
-      ${rankingHtml}
     </ol>
   `;
 }
 
 
-// ホーム画面用データを取得
+// ホームデータ取得
 async function loadHomeData() {
   try {
     const snapshot =
@@ -260,7 +296,6 @@ async function loadHomeData() {
         )
       );
 
-
     const reports =
       snapshot.docs.map(
         (document) => ({
@@ -269,9 +304,8 @@ async function loadHomeData() {
         })
       );
 
-
+    displayFeaturedReports(reports);
     displayTodayCount(reports);
-
     displayPopularReports(reports);
 
   } catch (error) {
@@ -280,26 +314,17 @@ async function loadHomeData() {
       error
     );
 
+    todayCount.textContent =
+      "取得失敗";
 
-    if (todayCount) {
-      todayCount.textContent =
-        "取得失敗";
-    }
+    todayCountMessage.textContent =
+      "ページを再読み込みしてください。";
 
+    featuredReports.textContent =
+      "重要事例の読み込みに失敗しました。";
 
-    if (todayCountMessage) {
-      todayCountMessage.textContent =
-        "ページを再読み込みしてください。";
-    }
-
-
-    if (popularReports) {
-      popularReports.className =
-        "ranking-message";
-
-      popularReports.innerHTML =
-        "人気事例の読み込みに失敗しました。";
-    }
+    popularReports.textContent =
+      "人気事例の読み込みに失敗しました。";
   }
 }
 
