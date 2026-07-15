@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        お知らせ管理 | 消防ヒヤリハット共有システム
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <style>
+        .notice-status {
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            background: #eef5ff;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .notice-status.error {
+            background: #ffebee;
+            color: #b71c1c;
+            font-weight: bold;
+        }
+
+        .notice-status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .notice-form-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .notice-form-card label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        .notice-form-card input,
+        .notice-form-card textarea {
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .notice-form-card textarea {
+            min-height: 180px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+
+        .save-button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 17px;
+            border: none;
+            border-radius: 12px;
+            background: #00838f;
+            color: white;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .save-button:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+        }
+
+        .updated-information {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f4f7fb;
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>
+            📢 お知らせ管理
+        </h1>
+
+        <p class="subTitle">
+            トップページへ表示するお知らせを編集します。
+        </p>
+    </header>
+
+
+    <div
+        id="noticeStatus"
+        class="notice-status"
+    >
+        管理者権限を確認しています...
+    </div>
+
+
+    <form
+        id="noticeForm"
+        class="notice-form-card"
+        hidden
+    >
+
+        <h2>
+            お知らせ内容
+        </h2>
+
+
+        <label for="noticeTitle">
+            タイトル
+        </label>
+
+        <input
+            type="text"
+            id="noticeTitle"
+            maxlength="100"
+            placeholder="例：車両事故防止について"
+            required
+        >
+
+
+        <label for="noticeBody">
+            本文
+        </label>
+
+        <textarea
+            id="noticeBody"
+            maxlength="2000"
+            placeholder="トップページへ掲載する内容を入力してください。"
+            required
+        ></textarea>
+
+
+        <div
+            id="updatedInformation"
+            class="updated-information"
+            hidden
+        >
+            <div>
+                <strong>最終更新：</strong>
+                <span id="updatedAt">未更新</span>
+            </div>
+
+            <div>
+                <strong>更新者：</strong>
+                <span id="updatedBy">未設定</span>
+            </div>
+        </div>
+
+
+        <button
+            type="submit"
+            id="saveButton"
+            class="save-button"
+        >
+            💾 お知らせを保存
+        </button>
+
+    </form>
+
+
+    <div style="text-align:center; margin-top:20px;">
+
+        <a href="admin.html">
+            ← 管理ダッシュボードへ戻る
+        </a>
+
+        ｜
+
+        <a href="index.html">
+            🏠 ホームへ戻る
+        </a>
+
+    </div>
+
+
+    <footer>
+        Version 1.2.1
+    </footer>
+
+</div>
+
+
+<script
+    type="module"
+    src="notice.js?v=121"
+></script>
+
+</body>
+
+</html>
