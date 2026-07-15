@@ -123,6 +123,43 @@
             color: #b71c1c;
         }
 
+        .csv-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .csv-section h2 {
+            margin-bottom: 10px;
+        }
+
+        .csv-section p {
+            margin-bottom: 18px;
+            color: #555;
+        }
+
+        .csv-button {
+            display: inline-block;
+            width: 100%;
+            max-width: 400px;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 12px;
+            background: #2e7d32;
+            color: white;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .csv-button:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 600px) {
 
             .summary-grid,
@@ -264,6 +301,26 @@
 
         </section>
 
+
+        <section class="csv-section">
+
+            <h2>📤 CSV出力</h2>
+
+            <p>
+                登録されている全事案を、Excelで開けるCSV形式で出力します。
+            </p>
+
+            <button
+                type="button"
+                id="csvDownloadButton"
+                class="csv-button"
+                disabled
+            >
+                📥 CSVをダウンロード
+            </button>
+
+        </section>
+
     </main>
 
 
@@ -284,7 +341,7 @@
 
     <footer>
 
-        Version 0.3.0
+        Version 0.4.0
 
     </footer>
 
