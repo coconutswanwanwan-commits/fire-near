@@ -1,90 +1,51 @@
-import { db } from "./firebase.js";
-import {
-  collection,
-  getDocs,
-  query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ヒヤリハット一覧 | 消防ヒヤリハット共有システム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-const reportList = document.getElementById("reportList");
-const searchBox = document.getElementById("searchBox");
+<div class="container">
 
-let reports = [];
+<header>
+    <h1>📚 ヒヤリハット一覧</h1>
+    <p class="subTitle">投稿されたヒヤリハット事例です。</p>
+</header>
 
-async function loadReports() {
-  try {
-    const q = query(
-      collection(db, "reports"),
-      orderBy("createdAt", "desc")
-    );
+<section class="news">
 
-    const snapshot = await getDocs(q);
+    <h2>🔍 キーワード検索</h2>
 
-    reports = [];
+    <input
+        type="text"
+        id="searchBox"
+        placeholder="タイトル・内容・原因などを検索">
 
-    snapshot.forEach((doc) => {
-      reports.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
+</section>
 
-    displayReports(reports);
+<section class="news">
 
-  } catch (error) {
-    console.error(error);
-    reportList.innerHTML = "<p>一覧の読み込みに失敗しました。</p>";
-  }
-}
+    <div id="reportList">
+        読み込み中...
+    </div>
 
-function displayReports(list) {
+</section>
 
-  reportList.innerHTML = "";
+<div style="text-align:center; margin-top:20px;">
+    <a href="index.html">🏠 ホームへ戻る</a>
+</div>
 
-  if (list.length === 0) {
-    reportList.innerHTML = "<p>該当する事例はありません。</p>";
-    return;
-  }
+<footer>
+Version 0.2.0
+</footer>
 
-  list.forEach((data) => {
+</div>
 
-    reportList.innerHTML += `
-      <div class="news">
-        <h3>
-          <a href="detail.html?id=${data.id}">
-            ${data.title}
-          </a>
-        </h3>
+<script type="module" src="firebase.js"></script>
+<script type="module" src="list.js"></script>
 
-        <p><strong>所属：</strong>${data.department}</p>
-        <p><strong>業務区分：</strong>${data.category}</p>
-        <p><strong>レベル：</strong>${data.level}</p>
-        <p><strong>発生日：</strong>${data.date}</p>
-
-      </div>
-    `;
-  });
-
-}
-
-searchBox.addEventListener("input", () => {
-
-  const keyword = searchBox.value.toLowerCase();
-
-  const filtered = reports.filter(report => {
-
-    return (
-      (report.title || "").toLowerCase().includes(keyword) ||
-      (report.situation || "").toLowerCase().includes(keyword) ||
-      (report.cause || "").toLowerCase().includes(keyword) ||
-      (report.countermeasure || "").toLowerCase().includes(keyword) ||
-      (report.lesson || "").toLowerCase().includes(keyword)
-    );
-
-  });
-
-  displayReports(filtered);
-
-});
-
-loadReports();
+</body>
+</html>
