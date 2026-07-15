@@ -12,8 +12,7 @@ import {
 
 import {
   GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
@@ -134,7 +133,7 @@ async function checkAdmin(user) {
     return false;
   }
 
-  const adminDocument =
+  const adminSnapshot =
     await getDoc(
       doc(
         db,
@@ -143,7 +142,7 @@ async function checkAdmin(user) {
       )
     );
 
-  return adminDocument.exists();
+  return adminSnapshot.exists();
 }
 
 
@@ -204,18 +203,45 @@ async function login() {
     true;
 
   showStatus(
-    "Googleログイン画面へ移動します..."
+    "Googleログイン画面を開いています..."
   );
 
   try {
-    await signInWithRedirect(
-      auth,
-      provider
+    const result =
+      await signInWithPopup(
+        auth,
+        provider
+      );
+
+    showStatus(
+      "管理者権限を確認しています..."
     );
+
+    const isAdmin =
+      await checkAdmin(
+        result.user
+      );
+
+    if (!isAdmin) {
+      await signOut(auth);
+
+      showLoginScreen(
+        "このGoogleアカウントには管理者権限がありません。",
+        true
+      );
+
+      return;
+    }
+
+    showDashboard(
+      result.user
+    );
+
+    await loadSummary();
 
   } catch (error) {
     console.error(
-      "Googleログイン開始エラー:",
+      "Googleログインエラー:",
       error
     );
 
@@ -223,14 +249,22 @@ async function login() {
       false;
 
     let message =
-      "Googleログインを開始できませんでした。";
+      "Googleログインに失敗しました。";
 
     if (
       error.code ===
-      "auth/operation-not-allowed"
+      "auth/popup-closed-by-user"
     ) {
       message =
-        "FirebaseでGoogleログインが有効になっていません。";
+        "Googleログインがキャンセルされました。";
+    }
+
+    if (
+      error.code ===
+      "auth/popup-blocked"
+    ) {
+      message =
+        "ログイン画面がブロックされました。Safariのポップアップを許可してください。";
     }
 
     if (
@@ -239,6 +273,14 @@ async function login() {
     ) {
       message =
         "このWebサイトのドメインがFirebaseで許可されていません。";
+    }
+
+    if (
+      error.code ===
+      "auth/operation-not-allowed"
+    ) {
+      message =
+        "FirebaseでGoogleログインが有効になっていません。";
     }
 
     if (
@@ -264,6 +306,10 @@ async function logout() {
   try {
     await signOut(auth);
 
+    showLoginScreen(
+      "ログアウトしました。"
+    );
+
   } catch (error) {
     console.error(
       "ログアウトエラー:",
@@ -281,52 +327,6 @@ async function logout() {
 }
 
 
-async function processLoginState(user) {
-  if (!user) {
-    showLoginScreen();
-    return;
-  }
-
-  loginButton.disabled =
-    true;
-
-  showStatus(
-    "管理者権限を確認しています..."
-  );
-
-  try {
-    const isAdmin =
-      await checkAdmin(user);
-
-    if (!isAdmin) {
-      await signOut(auth);
-
-      showLoginScreen(
-        "このGoogleアカウントには管理者権限がありません。",
-        true
-      );
-
-      return;
-    }
-
-    showDashboard(user);
-
-    await loadSummary();
-
-  } catch (error) {
-    console.error(
-      "管理者確認エラー:",
-      error
-    );
-
-    showLoginScreen(
-      "管理者権限を確認できませんでした。Firestoreのadmins設定を確認してください。",
-      true
-    );
-  }
-}
-
-
 loginButton.addEventListener(
   "click",
   login
@@ -339,40 +339,47 @@ logoutButton.addEventListener(
 );
 
 
-getRedirectResult(auth)
-  .catch(error => {
-    console.error(
-      "リダイレクトログインエラー:",
-      error
-    );
-
-    let message =
-      "Googleログインに失敗しました。";
-
-    if (
-      error.code ===
-      "auth/unauthorized-domain"
-    ) {
-      message =
-        "このWebサイトのドメインがFirebaseで許可されていません。";
-    }
-
-    if (
-      error.code ===
-      "auth/operation-not-allowed"
-    ) {
-      message =
-        "FirebaseでGoogleログインが有効になっていません。";
-    }
-
-    showLoginScreen(
-      message,
-      true
-    );
-  });
-
-
 onAuthStateChanged(
   auth,
-  processLoginState
+  async user => {
+    if (!user) {
+      showLoginScreen();
+      return;
+    }
+
+    showStatus(
+      "管理者権限を確認しています..."
+    );
+
+    try {
+      const isAdmin =
+        await checkAdmin(user);
+
+      if (!isAdmin) {
+        await signOut(auth);
+
+        showLoginScreen(
+          "このGoogleアカウントには管理者権限がありません。",
+          true
+        );
+
+        return;
+      }
+
+      showDashboard(user);
+
+      await loadSummary();
+
+    } catch (error) {
+      console.error(
+        "管理者確認エラー:",
+        error
+      );
+
+      showLoginScreen(
+        "管理者権限を確認できませんでした。Firestoreのadmins設定を確認してください。",
+        true
+      );
+    }
+  }
 );
