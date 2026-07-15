@@ -2,7 +2,6 @@
 <html lang="ja">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -11,166 +10,272 @@
     >
 
     <title>
-        統計ダッシュボード | 消防ヒヤリハット共有システム
+        統計・CSV | 消防ヒヤリハット共有システム
     </title>
 
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
     <style>
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .summary-card {
+        .statistics-card {
             background: white;
-            padding: 20px;
             border-radius: 15px;
-            text-align: center;
+            padding: 22px;
+            margin-bottom: 22px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
 
-        .summary-card h3 {
-            font-size: 1rem;
-            margin-bottom: 10px;
-            color: #444;
-        }
-
-        .summary-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #0d47a1;
-        }
-
-        .statistics-section {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-        }
-
-        .statistics-section h2 {
-            margin-bottom: 20px;
-        }
-
-        .statistics-row {
+        .statistics-title {
             margin-bottom: 18px;
         }
 
-        .statistics-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-weight: bold;
-        }
-
-        .bar-background {
-            width: 100%;
-            height: 18px;
-            background: #e8edf3;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .bar {
-            height: 100%;
-            min-width: 0;
-            background: #1565c0;
-            border-radius: 10px;
-            transition: width 0.4s;
-        }
-
-        .level-summary {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .level-card {
-            padding: 15px;
+        .status-message {
+            padding: 16px;
+            margin-bottom: 22px;
             border-radius: 12px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .level-card.level1 {
-            background: #d4edda;
-        }
-
-        .level-card.level2 {
-            background: #fff3cd;
-        }
-
-        .level-card.level3 {
-            background: #ffe5b4;
-        }
-
-        .level-card.level4 {
-            background: #f8d7da;
-        }
-
-        .loading-message,
-        .error-message {
-            text-align: center;
-            padding: 20px;
+            background: #f4f7fb;
+            line-height: 1.7;
         }
 
         .error-message {
             color: #b71c1c;
+            font-weight: bold;
         }
 
-        .csv-section {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
         }
 
-        .csv-section h2 {
-            margin-bottom: 10px;
+        .filter-item label {
+            margin-top: 0;
         }
 
-        .csv-section p {
-            margin-bottom: 18px;
-            color: #555;
+        .filter-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .filter-button,
+        .reset-button,
+        .csv-button {
+            width: 100%;
+            padding: 14px 10px;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .filter-button {
+            background: #1565c0;
+        }
+
+        .reset-button {
+            background: #616161;
         }
 
         .csv-button {
-            display: inline-block;
-            width: 100%;
-            max-width: 400px;
-            padding: 16px 20px;
-            border: none;
-            border-radius: 12px;
             background: #2e7d32;
-            color: white;
-            font-size: 1.05rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .summary-card {
+            padding: 20px 12px;
+            border-radius: 14px;
+            background: #f4f7fb;
+            text-align: center;
+        }
+
+        .summary-label {
+            margin-bottom: 8px;
+            color: #555;
             font-weight: bold;
-            cursor: pointer;
         }
 
-        .csv-button:disabled {
-            background: #9e9e9e;
-            cursor: not-allowed;
+        .summary-number {
+            color: #0d47a1;
+            font-size: 2rem;
+            font-weight: bold;
         }
 
-        @media (max-width: 600px) {
+        .summary-unit {
+            margin-left: 3px;
+            color: #555;
+            font-size: 0.9rem;
+        }
 
-            .summary-grid,
-            .level-summary {
+        .chart-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: minmax(90px, 160px) 1fr 60px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chart-label {
+            font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        .chart-track {
+            height: 24px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e6ebf1;
+        }
+
+        .chart-bar {
+            height: 100%;
+            min-width: 0;
+            border-radius: 999px;
+            background: #1565c0;
+            transition: width 0.3s;
+        }
+
+        .chart-value {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .level-chart .chart-row:nth-child(1) .chart-bar {
+            background: #43a047;
+        }
+
+        .level-chart .chart-row:nth-child(2) .chart-bar {
+            background: #f9a825;
+        }
+
+        .level-chart .chart-row:nth-child(3) .chart-bar {
+            background: #ef6c00;
+        }
+
+        .level-chart .chart-row:nth-child(4) .chart-bar {
+            background: #c62828;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .statistics-table {
+            width: 100%;
+            min-width: 620px;
+            border-collapse: collapse;
+        }
+
+        .statistics-table th,
+        .statistics-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #d9e1ea;
+            text-align: left;
+        }
+
+        .statistics-table th {
+            background: #eef3f8;
+            white-space: nowrap;
+        }
+
+        .statistics-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .featured-text {
+            color: #ef6c00;
+            font-weight: bold;
+        }
+
+        .empty-message {
+            padding: 28px 15px;
+            border-radius: 12px;
+            background: #f4f7fb;
+            text-align: center;
+            color: #555;
+        }
+
+        .print-button {
+            width: 100%;
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 10px;
+            background: #6a1b9a;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .back-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .filter-grid {
                 grid-template-columns: 1fr;
             }
 
+            .filter-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-row {
+                grid-template-columns: 90px 1fr 48px;
+                gap: 8px;
+            }
         }
 
-    </style>
+        @media (max-width: 420px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
+        @media print {
+            body {
+                background: white;
+            }
+
+            .container {
+                max-width: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            header,
+            .statistics-card {
+                box-shadow: none;
+            }
+
+            .filter-card,
+            .back-links,
+            footer,
+            .print-button {
+                display: none;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -179,144 +284,304 @@
 
     <header>
 
-        <h1>📊 統計ダッシュボード</h1>
+        <h1>
+            📊 統計・CSV
+        </h1>
 
         <p class="subTitle">
-            ヒヤリハットの発生傾向を確認できます。
+            投稿データの集計・分析・CSV出力
         </p>
 
     </header>
 
 
     <div
-        id="loadingMessage"
-        class="loading-message"
+        id="statusMessage"
+        class="status-message"
     >
-        統計情報を読み込み中...
+        投稿データを読み込んでいます...
     </div>
 
 
-    <main id="statisticsContent" hidden>
+    <section class="statistics-card filter-card">
 
-        <section class="summary-grid">
+        <h2 class="statistics-title">
+            🔎 集計条件
+        </h2>
 
-            <div class="summary-card">
+        <div class="filter-grid">
 
-                <h3>総投稿件数</h3>
+            <div class="filter-item">
 
-                <div
-                    id="totalCount"
-                    class="summary-number"
+                <label for="startDate">
+                    開始日
+                </label>
+
+                <input
+                    type="date"
+                    id="startDate"
                 >
-                    0
-                </div>
 
             </div>
 
 
-            <div class="summary-card">
+            <div class="filter-item">
 
-                <h3>今月の投稿件数</h3>
+                <label for="endDate">
+                    終了日
+                </label>
 
-                <div
-                    id="monthlyCount"
-                    class="summary-number"
+                <input
+                    type="date"
+                    id="endDate"
                 >
-                    0
-                </div>
 
             </div>
 
-        </section>
 
+            <div class="filter-item">
 
-        <section class="statistics-section">
+                <label for="departmentFilter">
+                    所属
+                </label>
 
-            <h2>⚠️ レベル別件数</h2>
+                <select id="departmentFilter">
 
-            <div class="level-summary">
+                    <option value="">
+                        すべて
+                    </option>
 
-                <div class="level-card level1">
-
-                    🟢 レベル1
-
-                    <div id="level1Count">
-                        0件
-                    </div>
-
-                </div>
-
-
-                <div class="level-card level2">
-
-                    🟡 レベル2
-
-                    <div id="level2Count">
-                        0件
-                    </div>
-
-                </div>
-
-
-                <div class="level-card level3">
-
-                    🟠 レベル3
-
-                    <div id="level3Count">
-                        0件
-                    </div>
-
-                </div>
-
-
-                <div class="level-card level4">
-
-                    🔴 レベル4
-
-                    <div id="level4Count">
-                        0件
-                    </div>
-
-                </div>
+                </select>
 
             </div>
 
-        </section>
+        </div>
 
 
-        <section class="statistics-section">
-
-            <h2>🏢 所属別件数</h2>
-
-            <div id="departmentStatistics"></div>
-
-        </section>
-
-
-        <section class="statistics-section">
-
-            <h2>🚒 業務区分別件数</h2>
-
-            <div id="categoryStatistics"></div>
-
-        </section>
-
-
-        <section class="csv-section">
-
-            <h2>📤 CSV出力</h2>
-
-            <p>
-                登録されている全事案を、Excelで開けるCSV形式で出力します。
-            </p>
+        <div class="filter-actions">
 
             <button
                 type="button"
-                id="csvDownloadButton"
-                class="csv-button"
-                disabled
+                id="filterButton"
+                class="filter-button"
             >
-                📥 CSVをダウンロード
+                集計する
+            </button>
+
+            <button
+                type="button"
+                id="resetButton"
+                class="reset-button"
+            >
+                条件をリセット
+            </button>
+
+            <button
+                type="button"
+                id="csvButton"
+                class="csv-button"
+            >
+                CSVを出力
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <main id="statisticsArea" hidden>
+
+        <section class="statistics-card">
+
+            <h2 class="statistics-title">
+                📌 集計概要
+            </h2>
+
+            <div class="summary-grid">
+
+                <div class="summary-card">
+
+                    <div class="summary-label">
+                        投稿件数
+                    </div>
+
+                    <div>
+                        <span
+                            id="totalCount"
+                            class="summary-number"
+                        >
+                            0
+                        </span>
+
+                        <span class="summary-unit">
+                            件
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <div class="summary-label">
+                        重要事例
+                    </div>
+
+                    <div>
+                        <span
+                            id="featuredCount"
+                            class="summary-number"
+                        >
+                            0
+                        </span>
+
+                        <span class="summary-unit">
+                            件
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <div class="summary-label">
+                        レベル3・4
+                    </div>
+
+                    <div>
+                        <span
+                            id="highRiskCount"
+                            class="summary-number"
+                        >
+                            0
+                        </span>
+
+                        <span class="summary-unit">
+                            件
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <div class="summary-label">
+                        所属数
+                    </div>
+
+                    <div>
+                        <span
+                            id="departmentCount"
+                            class="summary-number"
+                        >
+                            0
+                        </span>
+
+                        <span class="summary-unit">
+                            所属
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="statistics-card">
+
+            <h2 class="statistics-title">
+                📅 月別投稿件数
+            </h2>
+
+            <div
+                id="monthlyChart"
+                class="chart-list"
+            ></div>
+
+        </section>
+
+
+        <section class="statistics-card">
+
+            <h2 class="statistics-title">
+                ⚠️ レベル別投稿件数
+            </h2>
+
+            <div
+                id="levelChart"
+                class="chart-list level-chart"
+            ></div>
+
+        </section>
+
+
+        <section class="statistics-card">
+
+            <h2 class="statistics-title">
+                🚒 所属別投稿件数
+            </h2>
+
+            <div
+                id="departmentChart"
+                class="chart-list"
+            ></div>
+
+        </section>
+
+
+        <section class="statistics-card">
+
+            <h2 class="statistics-title">
+                📋 集計対象一覧
+            </h2>
+
+            <div class="table-wrapper">
+
+                <table class="statistics-table">
+
+                    <thead>
+
+                    <tr>
+                        <th>
+                            日時
+                        </th>
+
+                        <th>
+                            タイトル
+                        </th>
+
+                        <th>
+                            所属
+                        </th>
+
+                        <th>
+                            レベル
+                        </th>
+
+                        <th>
+                            重要事例
+                        </th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="reportTableBody"></tbody>
+
+                </table>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="printButton"
+                class="print-button"
+            >
+                この集計結果を印刷
             </button>
 
         </section>
@@ -324,13 +589,11 @@
     </main>
 
 
-    <div style="text-align:center; margin-top:20px;">
+    <div class="back-links">
 
-        <a href="list.html">
-            📚 事例一覧
+        <a href="admin.html">
+            👨‍💼 管理画面へ戻る
         </a>
-
-        ｜
 
         <a href="index.html">
             🏠 ホームへ戻る
@@ -340,9 +603,7 @@
 
 
     <footer>
-
-        Version 0.4.0
-
+        Version 1.3.0
     </footer>
 
 </div>
@@ -350,7 +611,7 @@
 
 <script
     type="module"
-    src="stats.js"
+    src="stats.js?v=130"
 ></script>
 
 </body>
