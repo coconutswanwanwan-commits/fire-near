@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ヒヤリハット一覧 | 消防ヒヤリハット共有システム</title>
+    <title>ヒヤリハット一覧 | Fire Near</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,29 +17,61 @@
 
 <section class="news">
 
-    <h2>🔍 キーワード検索</h2>
+<h2>🔍 検索・絞り込み</h2>
 
-    <input
-        type="text"
-        id="searchBox"
-        placeholder="タイトル・内容・原因などを検索">
+<p>キーワード</p>
+<input
+    type="text"
+    id="searchBox"
+    placeholder="タイトル・内容・原因などを検索">
+
+<p>所属</p>
+<select id="departmentFilter">
+    <option value="">すべて</option>
+    <option>消防本部</option>
+    <option>消防署</option>
+    <option>北分署</option>
+    <option>南分署</option>
+</select>
+
+<p>業務区分</p>
+<select id="categoryFilter">
+    <option value="">すべて</option>
+    <option>消火</option>
+    <option>救助</option>
+    <option>救急</option>
+    <option>予防</option>
+    <option>査察</option>
+    <option>指令</option>
+    <option>その他</option>
+</select>
+
+<p>レベル</p>
+<select id="levelFilter">
+    <option value="">すべて</option>
+    <option>レベル1（軽微）</option>
+    <option>レベル2（注意）</option>
+    <option>レベル3（重大）</option>
+    <option>レベル4（事故寸前）</option>
+</select>
 
 </section>
 
 <section class="news">
 
-    <div id="reportList">
-        読み込み中...
-    </div>
+<div id="reportList">
+    読み込み中...
+</div>
 
 </section>
 
 <div style="text-align:center; margin-top:20px;">
+    <a href="post.html">📝 新規投稿</a> |
     <a href="index.html">🏠 ホームへ戻る</a>
 </div>
 
 <footer>
-Version 0.2.0
+Version 0.2.3
 </footer>
 
 </div>
