@@ -32,9 +32,7 @@
         </h1>
 
         <p class="subTitle">
-
             Fire Near
-
         </p>
 
     </header>
@@ -43,19 +41,21 @@
     <section class="today">
 
         <h2>
-
             本日の投稿件数
-
         </h2>
 
         <div
             class="count"
             id="todayCount"
         >
-
-            0件
-
+            読み込み中...
         </div>
+
+        <p
+            id="todayCountMessage"
+            style="margin-top:8px; color:#666; font-size:0.9rem;"
+        >
+        </p>
 
     </section>
 
@@ -66,11 +66,8 @@
             href="post.html"
             class="menuButton"
         >
-
             📝<br>
-
             投稿する
-
         </a>
 
 
@@ -78,11 +75,8 @@
             href="list.html"
             class="menuButton"
         >
-
             📚<br>
-
             事例を見る
-
         </a>
 
 
@@ -90,11 +84,8 @@
             href="list.html"
             class="menuButton"
         >
-
             🔍<br>
-
             検索する
-
         </a>
 
 
@@ -102,11 +93,8 @@
             href="stats.html"
             class="menuButton"
         >
-
             📊<br>
-
             統計を見る
-
         </a>
 
     </nav>
@@ -115,9 +103,7 @@
     <section class="news">
 
         <h2>
-
             📢 お知らせ
-
         </h2>
 
         <ul>
@@ -131,15 +117,15 @@
             </li>
 
             <li>
-                Ver.0.3.0 開発中
+                🔍 検索・絞り込み機能を利用できます。
             </li>
 
             <li>
-                🔍 検索・絞り込み機能を追加しました。
+                📊 統計・CSV出力機能を利用できます。
             </li>
 
             <li>
-                📊 統計ダッシュボードを開発中です。
+                👍 参考になった機能を追加しました。
             </li>
 
         </ul>
@@ -151,7 +137,7 @@
 
 <footer>
 
-    Version 0.3.0
+    Version 0.5.1
 
     <br>
 
@@ -159,6 +145,12 @@
     coconutswanwanwan-commits
 
 </footer>
+
+
+<script
+    type="module"
+    src="home.js?v=051"
+></script>
 
 </body>
 
