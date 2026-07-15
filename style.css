@@ -168,3 +168,25 @@ button{
     cursor:pointer;
 
 }
+.level{
+    display:inline-block;
+    padding:6px 12px;
+    border-radius:20px;
+    font-weight:bold;
+}
+
+.level1{
+    background:#d4edda;
+}
+
+.level2{
+    background:#fff3cd;
+}
+
+.level3{
+    background:#ffe5b4;
+}
+
+.level4{
+    background:#f8d7da;
+}
