@@ -5,9 +5,9 @@ import {
 
 import {
   collection,
-  getDocs,
   doc,
-  getDoc
+  getDoc,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 import {
@@ -15,62 +15,102 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 
-const reportStatus =
-  document.getElementById("reportStatus");
+const statusMessage =
+  document.getElementById("statusMessage");
 
-const reportControls =
-  document.getElementById("reportControls");
+const reportArea =
+  document.getElementById("reportArea");
 
-const reportMonth =
-  document.getElementById("reportMonth");
+const monthInput =
+  document.getElementById("monthInput");
 
-const createReportButton =
-  document.getElementById("createReportButton");
+const reportTitleInput =
+  document.getElementById("reportTitleInput");
 
-const printReportButton =
-  document.getElementById("printReportButton");
+const createButton =
+  document.getElementById("createButton");
 
-const monthlyReport =
-  document.getElementById("monthlyReport");
+const printButton =
+  document.getElementById("printButton");
+
+const currentMonthButton =
+  document.getElementById("currentMonthButton");
+
+const reportHeading =
+  document.getElementById("reportHeading");
 
 const reportPeriod =
   document.getElementById("reportPeriod");
 
-const monthlyTotalCount =
-  document.getElementById("monthlyTotalCount");
+const reportCreatedDate =
+  document.getElementById("reportCreatedDate");
 
-const monthlyFeaturedCount =
-  document.getElementById("monthlyFeaturedCount");
+const totalCount =
+  document.getElementById("totalCount");
 
-const levelReport =
-  document.getElementById("levelReport");
+const featuredCount =
+  document.getElementById("featuredCount");
 
-const departmentReport =
-  document.getElementById("departmentReport");
+const highRiskCount =
+  document.getElementById("highRiskCount");
 
-const categoryReport =
-  document.getElementById("categoryReport");
+const departmentCount =
+  document.getElementById("departmentCount");
 
-const featuredCaseReport =
-  document.getElementById("featuredCaseReport");
+const analysisText =
+  document.getElementById("analysisText");
 
-const popularCaseReport =
-  document.getElementById("popularCaseReport");
+const levelChart =
+  document.getElementById("levelChart");
 
-const allCaseReport =
-  document.getElementById("allCaseReport");
+const departmentChart =
+  document.getElementById("departmentChart");
 
-const generatedInformation =
-  document.getElementById("generatedInformation");
+const featuredCaseList =
+  document.getElementById("featuredCaseList");
+
+const highRiskCaseList =
+  document.getElementById("highRiskCaseList");
+
+const reportTableBody =
+  document.getElementById("reportTableBody");
 
 
 let allReports = [];
-let currentAdminUser = null;
+let monthlyReports = [];
 
 
-// HTMLへ安全に表示
+function showStatus(
+  message,
+  isError = false
+) {
+  statusMessage.hidden =
+    false;
+
+  statusMessage.textContent =
+    message;
+
+  statusMessage.className =
+    "status-message";
+
+  if (isError) {
+    statusMessage.classList.add(
+      "error-message"
+    );
+  }
+}
+
+
+function hideStatus() {
+  statusMessage.hidden =
+    true;
+}
+
+
 function escapeHtml(value) {
-  return String(value ?? "")
+  return String(
+    value ?? ""
+  )
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -79,47 +119,7 @@ function escapeHtml(value) {
 }
 
 
-// 状態表示
-function showStatus(
-  message,
-  type = ""
-) {
-  reportStatus.textContent =
-    message;
-
-  reportStatus.className =
-    "report-status";
-
-  if (type) {
-    reportStatus.classList.add(type);
-  }
-}
-
-
-// 管理者確認
-async function checkAdmin(user) {
-  if (!user) {
-    return false;
-  }
-
-  const adminReference =
-    doc(
-      db,
-      "admins",
-      user.uid
-    );
-
-  const adminSnapshot =
-    await getDoc(
-      adminReference
-    );
-
-  return adminSnapshot.exists();
-}
-
-
-// 現在月をYYYY-MM形式で取得
-function getCurrentMonthValue() {
+function getCurrentMonthString() {
   const today =
     new Date();
 
@@ -135,469 +135,799 @@ function getCurrentMonthValue() {
 }
 
 
-// YYYY-MMを日本語表示
-function formatMonthLabel(value) {
+function getReportDate(report) {
+  const value =
+    report.createdAt ||
+    report.date ||
+    report.reportDate ||
+    null;
+
+  if (!value) {
+    return null;
+  }
+
+  if (
+    typeof value.toDate ===
+    "function"
+  ) {
+    return value.toDate();
+  }
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+
+function formatDate(value) {
+  const date =
+    value instanceof Date
+      ? value
+      : null;
+
+  if (!date) {
+    return "未記録";
+  }
+
+  return new Intl.DateTimeFormat(
+    "ja-JP",
+    {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  ).format(date);
+}
+
+
+function formatCreatedDate() {
+  const now =
+    new Date();
+
+  return new Intl.DateTimeFormat(
+    "ja-JP",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    }
+  ).format(now);
+}
+
+
+function getTitle(report) {
+  return (
+    report.title ||
+    report.subject ||
+    report.category ||
+    "無題の投稿"
+  );
+}
+
+
+function getDepartment(report) {
+  return (
+    report.department ||
+    report.affiliation ||
+    report.station ||
+    report.section ||
+    "所属未設定"
+  );
+}
+
+
+function getLevel(report) {
+  const rawLevel =
+    report.level ??
+    report.riskLevel ??
+    report.severity ??
+    "";
+
+  const match =
+    String(rawLevel).match(/[1-4]/);
+
+  return match
+    ? match[0]
+    : "";
+}
+
+
+function getSummary(report) {
+  return (
+    report.summary ||
+    report.description ||
+    report.content ||
+    report.detail ||
+    "内容の記載はありません。"
+  );
+}
+
+
+async function checkAdmin(user) {
+  if (!user) {
+    return false;
+  }
+
+  const adminSnapshot =
+    await getDoc(
+      doc(
+        db,
+        "admins",
+        user.uid
+      )
+    );
+
+  return adminSnapshot.exists();
+}
+
+
+function getSelectedMonthRange() {
+  const selectedMonth =
+    monthInput.value;
+
+  if (!selectedMonth) {
+    return null;
+  }
+
   const [
+    yearText,
+    monthText
+  ] =
+    selectedMonth.split("-");
+
+  const year =
+    Number(yearText);
+
+  const month =
+    Number(monthText);
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month)
+  ) {
+    return null;
+  }
+
+  const start =
+    new Date(
+      year,
+      month - 1,
+      1,
+      0,
+      0,
+      0,
+      0
+    );
+
+  const end =
+    new Date(
+      year,
+      month,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+
+  return {
     year,
-    month
-  ] = value.split("-");
-
-  return `${year}年${Number(month)}月`;
+    month,
+    start,
+    end
+  };
 }
 
 
-// 項目別集計
-function countByField(
+function createCountMap(
   reports,
-  fieldName
+  getKey
 ) {
-  const counts = {};
+  const countMap = {};
 
-  reports.forEach((report) => {
-    const value =
-      String(
-        report[fieldName] ||
-        "未設定"
-      );
+  reports.forEach(
+    report => {
+      const key =
+        getKey(report);
 
-    counts[value] =
-      (counts[value] || 0) + 1;
-  });
+      countMap[key] =
+        (countMap[key] || 0) + 1;
+    }
+  );
 
-  return counts;
+  return countMap;
 }
 
 
-// 集計表を作成
-function createStatisticsTable(
-  counts,
-  preferredOrder = []
+function renderBarChart(
+  element,
+  entries,
+  emptyMessage
 ) {
-  let entries =
-    Object.entries(counts);
+  element.innerHTML =
+    "";
+
+  if (entries.length === 0) {
+    element.innerHTML = `
+      <div class="empty-message">
+        ${escapeHtml(emptyMessage)}
+      </div>
+    `;
+
+    return;
+  }
+
+  const maximum =
+    Math.max(
+      ...entries.map(
+        entry => entry[1]
+      ),
+      1
+    );
+
+  entries.forEach(
+    ([label, value]) => {
+      const percentage =
+        Math.max(
+          (value / maximum) * 100,
+          value > 0 ? 3 : 0
+        );
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+      row.className =
+        "chart-row";
+
+      row.innerHTML = `
+        <div class="chart-label">
+          ${escapeHtml(label)}
+        </div>
+
+        <div class="chart-track">
+
+          <div
+            class="chart-bar"
+            style="width:${percentage}%"
+          ></div>
+
+        </div>
+
+        <div class="chart-value">
+          ${escapeHtml(value)}件
+        </div>
+      `;
+
+      element.appendChild(row);
+    }
+  );
+}
 
 
-  if (preferredOrder.length > 0) {
-    entries.sort(
-      ([firstLabel], [secondLabel]) => {
-        const firstIndex =
-          preferredOrder.indexOf(
-            firstLabel
-          );
+function renderSummary() {
+  totalCount.textContent =
+    monthlyReports.length;
 
-        const secondIndex =
-          preferredOrder.indexOf(
-            secondLabel
-          );
+  const featured =
+    monthlyReports.filter(
+      report =>
+        report.featured === true
+    ).length;
 
-        const normalizedFirst =
-          firstIndex === -1
-            ? 999
-            : firstIndex;
+  featuredCount.textContent =
+    featured;
 
-        const normalizedSecond =
-          secondIndex === -1
-            ? 999
-            : secondIndex;
+  const highRisk =
+    monthlyReports.filter(
+      report => {
+        const level =
+          getLevel(report);
 
-        if (
-          normalizedFirst !==
-          normalizedSecond
-        ) {
-          return (
-            normalizedFirst -
-            normalizedSecond
-          );
+        return (
+          level === "3" ||
+          level === "4"
+        );
+      }
+    ).length;
+
+  highRiskCount.textContent =
+    highRisk;
+
+  const departments =
+    new Set(
+      monthlyReports
+        .map(getDepartment)
+        .filter(
+          department =>
+            department !==
+            "所属未設定"
+        )
+    );
+
+  departmentCount.textContent =
+    departments.size;
+}
+
+
+function renderLevelChart() {
+  const counts = {
+    "レベル1": 0,
+    "レベル2": 0,
+    "レベル3": 0,
+    "レベル4": 0,
+    "未設定": 0
+  };
+
+  monthlyReports.forEach(
+    report => {
+      const level =
+        getLevel(report);
+
+      if (level) {
+        counts[
+          `レベル${level}`
+        ] += 1;
+
+      } else {
+        counts["未設定"] += 1;
+      }
+    }
+  );
+
+  const entries =
+    Object.entries(
+      counts
+    ).filter(
+      entry =>
+        entry[1] > 0
+    );
+
+  renderBarChart(
+    levelChart,
+    entries,
+    "対象月のレベル別データはありません。"
+  );
+}
+
+
+function renderDepartmentChart() {
+  const counts =
+    createCountMap(
+      monthlyReports,
+      getDepartment
+    );
+
+  const entries =
+    Object.entries(
+      counts
+    ).sort(
+      (a, b) => {
+        if (b[1] !== a[1]) {
+          return b[1] - a[1];
         }
 
-        return firstLabel.localeCompare(
-          secondLabel,
+        return a[0].localeCompare(
+          b[0],
           "ja"
         );
       }
     );
 
-  } else {
-    entries.sort(
-      (first, second) =>
-        second[1] - first[1]
-    );
-  }
-
-
-  if (entries.length === 0) {
-    return `
-      <p class="empty-message">
-        該当するデータはありません。
-      </p>
-    `;
-  }
-
-
-  return `
-    <table class="statistics-table">
-
-      <thead>
-        <tr>
-          <th>区分</th>
-          <th>件数</th>
-        </tr>
-      </thead>
-
-      <tbody>
-
-        ${entries
-          .map(([label, count]) => `
-            <tr>
-              <td>
-                ${escapeHtml(label)}
-              </td>
-
-              <td>
-                ${count}件
-              </td>
-            </tr>
-          `)
-          .join("")}
-
-      </tbody>
-
-    </table>
-  `;
+  renderBarChart(
+    departmentChart,
+    entries,
+    "対象月の所属別データはありません。"
+  );
 }
 
 
-// 事例カードを作成
-function createCaseCard(
-  report,
-  options = {}
+function createCaseElement(report) {
+  const article =
+    document.createElement(
+      "article"
+    );
+
+  article.className =
+    "case-item";
+
+  if (report.featured === true) {
+    article.classList.add(
+      "featured"
+    );
+  }
+
+  const level =
+    getLevel(report);
+
+  article.innerHTML = `
+    <div class="case-header">
+
+      <h3 class="case-title">
+        ${escapeHtml(
+          getTitle(report)
+        )}
+      </h3>
+
+      ${
+        report.featured === true
+          ? '<span class="featured-mark">📌 重要事例</span>'
+          : ""
+      }
+
+    </div>
+
+
+    <div class="case-meta">
+
+      <span class="meta-chip">
+        ${escapeHtml(
+          formatDate(
+            getReportDate(report)
+          )
+        )}
+      </span>
+
+      <span class="meta-chip">
+        ${escapeHtml(
+          getDepartment(report)
+        )}
+      </span>
+
+      <span class="meta-chip">
+        ${escapeHtml(
+          level
+            ? `レベル${level}`
+            : "レベル未設定"
+        )}
+      </span>
+
+    </div>
+
+
+    <div class="case-description">
+      ${escapeHtml(
+        getSummary(report)
+      )}
+    </div>
+  `;
+
+  return article;
+}
+
+
+function renderCaseList(
+  element,
+  reports,
+  emptyMessage
 ) {
-  const importantClass =
-    options.important
-      ? " important-case"
-      : "";
+  element.innerHTML =
+    "";
 
-  const helpful =
-    Number(
-      report.helpful || 0
-    );
-
-  return `
-    <article class="report-case${importantClass}">
-
-      <div class="report-case-title">
-        ${options.important ? "📌 " : ""}
-        ${escapeHtml(
-          report.title ||
-          "タイトル未設定"
-        )}
+  if (reports.length === 0) {
+    element.innerHTML = `
+      <div class="empty-message">
+        ${escapeHtml(emptyMessage)}
       </div>
-
-      <div class="report-case-info">
-
-        発生日：
-        ${escapeHtml(
-          report.date || "未設定"
-        )}
-
-        ／ 所属：
-        ${escapeHtml(
-          report.department || "未設定"
-        )}
-
-        ／ 業務区分：
-        ${escapeHtml(
-          report.category || "未設定"
-        )}
-
-        <br>
-
-        レベル：
-        ${escapeHtml(
-          report.level || "未設定"
-        )}
-
-        ／ 参考になった：
-        ${helpful}件
-
-      </div>
-
-      ${
-        options.showSituation
-          ? `
-            <div class="report-case-text">
-              <strong>発生状況：</strong><br>
-              ${escapeHtml(
-                report.situation ||
-                "未入力"
-              )}
-            </div>
-          `
-          : ""
-      }
-
-      ${
-        options.showCountermeasure
-          ? `
-            <div class="report-case-text">
-              <strong>改善策：</strong><br>
-              ${escapeHtml(
-                report.countermeasure ||
-                "未入力"
-              )}
-            </div>
-          `
-          : ""
-      }
-
-    </article>
-  `;
-}
-
-
-// レポート作成
-function createMonthlyReport() {
-  const selectedMonth =
-    reportMonth.value;
-
-  if (!selectedMonth) {
-    showStatus(
-      "集計対象月を選択してください。",
-      "error"
-    );
+    `;
 
     return;
   }
 
-
-  const monthlyReports =
-    allReports
-
-      .filter((report) =>
-        String(
-          report.date || ""
-        ).startsWith(selectedMonth)
-      )
-
-      .sort((first, second) =>
-        String(second.date || "")
-          .localeCompare(
-            String(first.date || "")
-          )
+  reports.forEach(
+    report => {
+      element.appendChild(
+        createCaseElement(report)
       );
+    }
+  );
+}
 
 
+function renderImportantCases() {
   const featuredReports =
     monthlyReports.filter(
-      (report) =>
+      report =>
         report.featured === true
     );
 
-
-  const popularReports =
-    [...monthlyReports]
-
-      .filter((report) =>
-        Number(
-          report.helpful || 0
-        ) > 0
-      )
-
-      .sort(
-        (first, second) =>
-          Number(
-            second.helpful || 0
-          ) -
-          Number(
-            first.helpful || 0
-          )
-      )
-
-      .slice(0, 5);
-
-
-  const levelCounts =
-    countByField(
-      monthlyReports,
-      "level"
-    );
-
-  const departmentCounts =
-    countByField(
-      monthlyReports,
-      "department"
-    );
-
-  const categoryCounts =
-    countByField(
-      monthlyReports,
-      "category"
-    );
-
-
-  reportPeriod.textContent =
-    `${formatMonthLabel(selectedMonth)}分`;
-
-
-  monthlyTotalCount.textContent =
-    `${monthlyReports.length}件`;
-
-
-  monthlyFeaturedCount.textContent =
-    `${featuredReports.length}件`;
-
-
-  levelReport.innerHTML =
-    createStatisticsTable(
-      levelCounts,
-      [
-        "レベル1（軽微）",
-        "レベル2（注意）",
-        "レベル3（重大）",
-        "レベル4（事故寸前）",
-        "未設定"
-      ]
-    );
-
-
-  departmentReport.innerHTML =
-    createStatisticsTable(
-      departmentCounts,
-      [
-        "消防本部",
-        "消防署",
-        "北分署",
-        "南分署",
-        "未設定"
-      ]
-    );
-
-
-  categoryReport.innerHTML =
-    createStatisticsTable(
-      categoryCounts
-    );
-
-
-  featuredCaseReport.innerHTML =
-    featuredReports.length > 0
-      ? featuredReports
-          .map((report) =>
-            createCaseCard(
-              report,
-              {
-                important: true,
-                showSituation: true,
-                showCountermeasure: true
-              }
-            )
-          )
-          .join("")
-      : `
-        <p class="empty-message">
-          この月に設定された重要事例はありません。
-        </p>
-      `;
-
-
-  popularCaseReport.innerHTML =
-    popularReports.length > 0
-      ? popularReports
-          .map((report, index) => `
-            <div
-              style="
-                margin-bottom:6px;
-                font-weight:bold;
-              "
-            >
-              ${index + 1}位
-            </div>
-
-            ${createCaseCard(report)}
-          `)
-          .join("")
-      : `
-        <p class="empty-message">
-          この月に「参考になった」が送信された事例はありません。
-        </p>
-      `;
-
-
-  allCaseReport.innerHTML =
-    monthlyReports.length > 0
-      ? monthlyReports
-          .map((report) =>
-            createCaseCard(
-              report,
-              {
-                showSituation: true,
-                showCountermeasure: true
-              }
-            )
-          )
-          .join("")
-      : `
-        <p class="empty-message">
-          この月の事例はありません。
-        </p>
-      `;
-
-
-  const generatedDate =
-    new Date()
-      .toLocaleString(
-        "ja-JP"
-      );
-
-
-  generatedInformation.textContent =
-    `作成日時：${generatedDate}　作成者：${
-      currentAdminUser?.displayName ||
-      currentAdminUser?.email ||
-      "管理者"
-    }`;
-
-
-  monthlyReport.hidden =
-    false;
-
-  printReportButton.disabled =
-    false;
-
-
-  showStatus(
-    `${formatMonthLabel(selectedMonth)}のレポートを作成しました。`
+  renderCaseList(
+    featuredCaseList,
+    featuredReports,
+    "対象月に重要事例はありません。"
   );
 
+  const highRiskReports =
+    monthlyReports.filter(
+      report => {
+        const level =
+          getLevel(report);
 
-  monthlyReport.scrollIntoView({
+        return (
+          level === "3" ||
+          level === "4"
+        );
+      }
+    );
+
+  renderCaseList(
+    highRiskCaseList,
+    highRiskReports,
+    "対象月にレベル3・4の事例はありません。"
+  );
+}
+
+
+function renderTable() {
+  reportTableBody.innerHTML =
+    "";
+
+  if (monthlyReports.length === 0) {
+    reportTableBody.innerHTML = `
+      <tr>
+        <td colspan="5">
+          対象月の投稿はありません。
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  monthlyReports.forEach(
+    report => {
+      const row =
+        document.createElement(
+          "tr"
+        );
+
+      const level =
+        getLevel(report);
+
+      row.innerHTML = `
+        <td>
+          ${escapeHtml(
+            formatDate(
+              getReportDate(report)
+            )
+          )}
+        </td>
+
+        <td>
+          ${escapeHtml(
+            getTitle(report)
+          )}
+        </td>
+
+        <td>
+          ${escapeHtml(
+            getDepartment(report)
+          )}
+        </td>
+
+        <td>
+          ${escapeHtml(
+            level
+              ? `レベル${level}`
+              : "未設定"
+          )}
+        </td>
+
+        <td>
+          ${
+            report.featured === true
+              ? "重要"
+              : "通常"
+          }
+        </td>
+      `;
+
+      reportTableBody.appendChild(
+        row
+      );
+    }
+  );
+}
+
+
+function createAnalysisText() {
+  const total =
+    monthlyReports.length;
+
+  if (total === 0) {
+    return (
+      "対象月の投稿はありませんでした。\n" +
+      "投稿状況を確認し、職員がヒヤリハット事例を共有しやすい環境づくりを継続します。"
+    );
+  }
+
+  const featured =
+    monthlyReports.filter(
+      report =>
+        report.featured === true
+    ).length;
+
+  const highRisk =
+    monthlyReports.filter(
+      report => {
+        const level =
+          getLevel(report);
+
+        return (
+          level === "3" ||
+          level === "4"
+        );
+      }
+    ).length;
+
+  const departmentCounts =
+    createCountMap(
+      monthlyReports,
+      getDepartment
+    );
+
+  const topDepartmentEntry =
+    Object.entries(
+      departmentCounts
+    ).sort(
+      (a, b) =>
+        b[1] - a[1]
+    )[0];
+
+  const levelCounts =
+    createCountMap(
+      monthlyReports,
+      report => {
+        const level =
+          getLevel(report);
+
+        return level
+          ? `レベル${level}`
+          : "未設定";
+      }
+    );
+
+  const topLevelEntry =
+    Object.entries(
+      levelCounts
+    ).sort(
+      (a, b) =>
+        b[1] - a[1]
+    )[0];
+
+  const lines = [];
+
+  lines.push(
+    `対象月の投稿件数は合計${total}件でした。`
+  );
+
+  if (topLevelEntry) {
+    lines.push(
+      `最も多かった区分は${topLevelEntry[0]}で、${topLevelEntry[1]}件でした。`
+    );
+  }
+
+  if (topDepartmentEntry) {
+    lines.push(
+      `所属別では「${topDepartmentEntry[0]}」からの投稿が最も多く、${topDepartmentEntry[1]}件でした。`
+    );
+  }
+
+  lines.push(
+    `重要事例は${featured}件、レベル3・4の事例は${highRisk}件でした。`
+  );
+
+  if (highRisk > 0) {
+    lines.push(
+      "レベル3・4の事例については、原因や背景を確認し、必要に応じて組織内で再発防止策を共有する必要があります。"
+    );
+
+  } else {
+    lines.push(
+      "レベル3・4に該当する事例はありませんでしたが、軽微な事例を含めた継続的な情報共有が重要です。"
+    );
+  }
+
+  return lines.join("\n");
+}
+
+
+function createReport() {
+  const range =
+    getSelectedMonthRange();
+
+  if (!range) {
+    alert(
+      "集計月を選択してください。"
+    );
+
+    monthInput.focus();
+    return;
+  }
+
+  const reportTitle =
+    reportTitleInput.value.trim() ||
+    "消防ヒヤリハット月例レポート";
+
+  monthlyReports =
+    allReports
+      .filter(
+        report => {
+          const reportDate =
+            getReportDate(report);
+
+          if (!reportDate) {
+            return false;
+          }
+
+          return (
+            reportDate >= range.start &&
+            reportDate <= range.end
+          );
+        }
+      )
+      .sort(
+        (a, b) => {
+          const dateA =
+            getReportDate(a);
+
+          const dateB =
+            getReportDate(b);
+
+          return (
+            (dateB?.getTime() || 0) -
+            (dateA?.getTime() || 0)
+          );
+        }
+      );
+
+  reportHeading.textContent =
+    reportTitle;
+
+  reportPeriod.textContent =
+    `${range.year}年${range.month}月分`;
+
+  reportCreatedDate.textContent =
+    `作成日：${formatCreatedDate()}`;
+
+  renderSummary();
+
+  analysisText.textContent =
+    createAnalysisText();
+
+  renderLevelChart();
+  renderDepartmentChart();
+  renderImportantCases();
+  renderTable();
+
+  reportArea.hidden =
+    false;
+
+  hideStatus();
+
+  reportArea.scrollIntoView({
     behavior: "smooth",
     block: "start"
   });
 }
 
 
-// PDF・印刷
-function printReport() {
-  if (monthlyReport.hidden) {
-    showStatus(
-      "先にレポートを作成してください。",
-      "error"
-    );
-
-    return;
-  }
-
-  window.print();
-}
-
-
-// Firestoreから事例を取得
 async function loadReports() {
   showStatus(
-    "事例データを読み込んでいます..."
+    "投稿データを読み込んでいます..."
   );
-
 
   try {
     const snapshot =
@@ -608,116 +938,105 @@ async function loadReports() {
         )
       );
 
-
     allReports =
       snapshot.docs.map(
-        (document) => ({
-          id: document.id,
-          ...document.data()
+        reportDocument => ({
+          id:
+            reportDocument.id,
+
+          ...reportDocument.data()
         })
       );
 
-
-    reportControls.hidden =
-      false;
-
-
-    showStatus(
-      "対象月を選択してレポートを作成してください。"
-    );
+    hideStatus();
+    createReport();
 
   } catch (error) {
     console.error(
-      "レポートデータ読み込みエラー:",
+      "月例レポートデータ取得エラー:",
       error
     );
 
-
     showStatus(
-      "事例データの読み込みに失敗しました。",
-      "error"
+      "投稿データの取得に失敗しました。Firestoreの設定と通信状態を確認してください。",
+      true
     );
   }
 }
 
 
-// ログイン状態確認
-onAuthStateChanged(
-  auth,
-  async (user) => {
-    reportControls.hidden =
-      true;
-
-    monthlyReport.hidden =
-      true;
-
-    currentAdminUser =
-      null;
+createButton.addEventListener(
+  "click",
+  createReport
+);
 
 
-    if (!user) {
-      showStatus(
-        "管理者としてログインしていません。管理ダッシュボードからログインしてください。",
-        "error"
-      );
-
-      return;
+printButton.addEventListener(
+  "click",
+  () => {
+    if (reportArea.hidden) {
+      createReport();
     }
 
-
-    showStatus(
-      "管理者権限を確認しています..."
-    );
-
-
-    try {
-      const isAdmin =
-        await checkAdmin(user);
-
-
-      if (!isAdmin) {
-        showStatus(
-          "このGoogleアカウントには管理者権限がありません。",
-          "error"
-        );
-
-        return;
-      }
-
-
-      currentAdminUser =
-        user;
-
-
-      reportMonth.value =
-        getCurrentMonthValue();
-
-
-      await loadReports();
-
-    } catch (error) {
-      console.error(
-        "管理者権限確認エラー:",
-        error
-      );
-
-
-      showStatus(
-        "管理者権限の確認に失敗しました。",
-        "error"
-      );
+    if (!reportArea.hidden) {
+      window.print();
     }
   }
 );
 
 
-createReportButton.addEventListener(
+currentMonthButton.addEventListener(
   "click",
-  createMonthlyReport
+  () => {
+    monthInput.value =
+      getCurrentMonthString();
+
+    createReport();
+  }
 );
 
 
-printReportButton.addEventListener(
-  "click",
-  printReport
+reportTitleInput.addEventListener(
+  "keydown",
+  event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      createReport();
+    }
+  }
+);
+
+
+onAuthStateChanged(
+  auth,
+  async user => {
+    try {
+      const isAdmin =
+        await checkAdmin(user);
+
+      if (!isAdmin) {
+        location.replace(
+          "admin.html"
+        );
+
+        return;
+      }
+
+      monthInput.value =
+        getCurrentMonthString();
+
+      await loadReports();
+
+    } catch (error) {
+      console.error(
+        "管理者確認エラー:",
+        error
+      );
+
+      showStatus(
+        "管理者権限を確認できませんでした。",
+        true
+      );
+    }
+  }
 );
