@@ -24,6 +24,12 @@ const departmentStatistics =
 const categoryStatistics =
   document.getElementById("categoryStatistics");
 
+const csvDownloadButton =
+  document.getElementById("csvDownloadButton");
+
+
+let reports = [];
+
 
 const levelElements = {
 
@@ -43,61 +49,44 @@ const levelElements = {
 
 
 const departments = [
-
   "消防本部",
-
   "消防署",
-
   "北分署",
-
   "南分署"
-
 ];
 
 
 const categories = [
-
   "予防",
-
   "査察",
-
   "救急",
-
   "救助",
-
   "警防",
-
   "消火",
-
   "通信指令",
-
   "指令",
-
   "総務",
-
   "その他"
-
 ];
 
 
 function escapeHtml(value) {
 
   return String(value ?? "")
-
     .replaceAll("&", "&amp;")
-
     .replaceAll("<", "&lt;")
-
     .replaceAll(">", "&gt;")
-
     .replaceAll('"', "&quot;")
-
     .replaceAll("'", "&#039;");
 
 }
 
 
-function countByField(reports, fieldName, options) {
+function countByField(
+  reportData,
+  fieldName,
+  options
+) {
 
   const result = {};
 
@@ -109,12 +98,15 @@ function countByField(reports, fieldName, options) {
   });
 
 
-  reports.forEach((report) => {
+  reportData.forEach((report) => {
 
     const value = report[fieldName];
 
 
-    if (value && Object.hasOwn(result, value)) {
+    if (
+      value &&
+      Object.hasOwn(result, value)
+    ) {
 
       result[value] += 1;
 
@@ -144,7 +136,10 @@ function createStatisticsRows(countData) {
       const percentage =
         count === 0
           ? 0
-          : Math.max((count / maximum) * 100, 4);
+          : Math.max(
+              (count / maximum) * 100,
+              4
+            );
 
 
       return `
@@ -182,7 +177,7 @@ function createStatisticsRows(countData) {
 }
 
 
-function getCurrentMonthCount(reports) {
+function getCurrentMonthCount(reportData) {
 
   const today =
     new Date();
@@ -198,7 +193,7 @@ function getCurrentMonthCount(reports) {
     `${year}-${month}`;
 
 
-  return reports.filter((report) => {
+  return reportData.filter((report) => {
 
     return String(report.date || "")
       .startsWith(currentMonth);
@@ -208,7 +203,7 @@ function getCurrentMonthCount(reports) {
 }
 
 
-function updateLevelStatistics(reports) {
+function updateLevelStatistics(reportData) {
 
   const levelCounts = {
 
@@ -223,7 +218,7 @@ function updateLevelStatistics(reports) {
   };
 
 
-  reports.forEach((report) => {
+  reportData.forEach((report) => {
 
     if (
       report.level &&
@@ -256,6 +251,202 @@ function updateLevelStatistics(reports) {
 }
 
 
+// CSV用の文字列を安全にする
+function escapeCsv(value) {
+
+  const text =
+    String(value ?? "");
+
+  const escaped =
+    text.replaceAll('"', '""');
+
+  return `"${escaped}"`;
+
+}
+
+
+// FirestoreのTimestampを文字列へ変換
+function formatCreatedAt(value) {
+
+  if (!value) {
+    return "";
+  }
+
+
+  if (typeof value.toDate === "function") {
+
+    const date =
+      value.toDate();
+
+    return date.toLocaleString(
+      "ja-JP"
+    );
+
+  }
+
+
+  return String(value);
+
+}
+
+
+// CSVファイルを作成
+function downloadCsv() {
+
+  if (reports.length === 0) {
+
+    alert(
+      "出力できる事案がありません。"
+    );
+
+    return;
+
+  }
+
+
+  const headers = [
+
+    "事案ID",
+
+    "発生日",
+
+    "所属",
+
+    "業務区分",
+
+    "発生場所",
+
+    "ヒヤリハットレベル",
+
+    "タイトル",
+
+    "発生状況",
+
+    "原因",
+
+    "改善策",
+
+    "学んだこと",
+
+    "タグ",
+
+    "登録日時"
+
+  ];
+
+
+  const rows =
+    reports.map((report) => [
+
+      report.id,
+
+      report.date,
+
+      report.department,
+
+      report.category,
+
+      report.place,
+
+      report.level,
+
+      report.title,
+
+      report.situation,
+
+      report.cause,
+
+      report.countermeasure,
+
+      report.lesson,
+
+      Array.isArray(report.tags)
+        ? report.tags.join("、")
+        : report.tags,
+
+      formatCreatedAt(
+        report.createdAt
+      )
+
+    ]);
+
+
+  const csvLines = [
+
+    headers.map(escapeCsv).join(","),
+
+    ...rows.map((row) =>
+      row.map(escapeCsv).join(",")
+    )
+
+  ];
+
+
+  const csvContent =
+    "\uFEFF" +
+    csvLines.join("\r\n");
+
+
+  const blob =
+    new Blob(
+      [csvContent],
+      {
+        type:
+          "text/csv;charset=utf-8;"
+      }
+    );
+
+
+  const today =
+    new Date();
+
+  const fileDate =
+    [
+      today.getFullYear(),
+
+      String(
+        today.getMonth() + 1
+      ).padStart(2, "0"),
+
+      String(
+        today.getDate()
+      ).padStart(2, "0")
+
+    ].join("");
+
+
+  const fileName =
+    `FireNear_${fileDate}.csv`;
+
+
+  const url =
+    URL.createObjectURL(blob);
+
+
+  const link =
+    document.createElement("a");
+
+
+  link.href =
+    url;
+
+  link.download =
+    fileName;
+
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  link.remove();
+
+
+  URL.revokeObjectURL(url);
+
+}
+
+
+// 統計データの読み込み
 async function loadStatistics() {
 
   try {
@@ -266,7 +457,7 @@ async function loadStatistics() {
       );
 
 
-    const reports =
+    reports =
       snapshot.docs.map((document) => ({
 
         id: document.id,
@@ -315,9 +506,15 @@ async function loadStatistics() {
       );
 
 
-    loadingMessage.hidden = true;
+    csvDownloadButton.disabled =
+      reports.length === 0;
 
-    statisticsContent.hidden = false;
+
+    loadingMessage.hidden =
+      true;
+
+    statisticsContent.hidden =
+      false;
 
 
   } catch (error) {
@@ -340,6 +537,12 @@ async function loadStatistics() {
   }
 
 }
+
+
+csvDownloadButton.addEventListener(
+  "click",
+  downloadCsv
+);
 
 
 loadStatistics();
