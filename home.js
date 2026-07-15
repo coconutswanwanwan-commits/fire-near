@@ -2,9 +2,7 @@ import { db } from "./firebase.js";
 
 import {
   collection,
-  query,
-  where,
-  getCountFromServer
+  getDocs
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
@@ -14,8 +12,24 @@ const todayCount =
 const todayCountMessage =
   document.getElementById("todayCountMessage");
 
+const popularReports =
+  document.getElementById("popularReports");
 
-// 日本の端末時刻をYYYY-MM-DD形式に変換
+
+// HTMLに安全に文字を表示する
+function escapeHtml(value) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+// 今日の日付をYYYY-MM-DDで取得
 function getLocalDateString() {
 
   const today =
@@ -37,69 +51,237 @@ function getLocalDateString() {
 }
 
 
-// 本日の投稿件数を取得
-async function loadTodayCount() {
+// Firestore Timestampを比較用の数値へ変換
+function getCreatedAtNumber(value) {
 
-  if (!todayCount) {
-    return;
+  if (
+    value &&
+    typeof value.toMillis === "function"
+  ) {
+
+    return value.toMillis();
+
   }
+
+  return 0;
+
+}
+
+
+// 順位表示
+function getRankingMark(index) {
+
+  switch (index) {
+
+    case 0:
+      return "🥇";
+
+    case 1:
+      return "🥈";
+
+    case 2:
+      return "🥉";
+
+    default:
+      return `${index + 1}位`;
+
+  }
+
+}
+
+
+// 本日の投稿件数を表示
+function displayTodayCount(reports) {
+
+  const today =
+    getLocalDateString();
+
+  const count =
+    reports.filter((report) => {
+
+      return report.date === today;
+
+    }).length;
 
 
   todayCount.textContent =
-    "読み込み中...";
+    `${count}件`;
 
+
+  if (count === 0) {
+
+    todayCountMessage.textContent =
+      "本日の投稿はまだありません。";
+
+  } else {
+
+    todayCountMessage.textContent =
+      "本日、新しい事例が共有されています。";
+
+  }
+
+}
+
+
+// 人気事例を表示
+function displayPopularReports(reports) {
+
+  const ranking =
+    [...reports]
+
+      .filter((report) => {
+
+        return Number(report.helpful || 0) > 0;
+
+      })
+
+      .sort((first, second) => {
+
+        const helpfulDifference =
+          Number(second.helpful || 0) -
+          Number(first.helpful || 0);
+
+
+        if (helpfulDifference !== 0) {
+
+          return helpfulDifference;
+
+        }
+
+
+        return (
+          getCreatedAtNumber(second.createdAt) -
+          getCreatedAtNumber(first.createdAt)
+        );
+
+      })
+
+      .slice(0, 5);
+
+
+  if (ranking.length === 0) {
+
+    popularReports.className =
+      "ranking-message";
+
+    popularReports.innerHTML = `
+      まだ「参考になった」が送信された事例はありません。
+    `;
+
+    return;
+
+  }
+
+
+  const rankingHtml =
+    ranking
+
+      .map((report, index) => {
+
+        const helpful =
+          Number(report.helpful || 0);
+
+
+        return `
+          <li class="ranking-item">
+
+            <div class="ranking-number">
+
+              ${getRankingMark(index)}
+
+            </div>
+
+
+            <div class="ranking-content">
+
+              <a
+                class="ranking-title"
+                href="detail.html?id=${encodeURIComponent(report.id)}"
+              >
+
+                ${escapeHtml(
+                  report.title || "タイトル未設定"
+                )}
+
+              </a>
+
+
+              <div class="ranking-info">
+
+                ${escapeHtml(
+                  report.department || "所属未設定"
+                )}
+
+                ／
+
+                ${escapeHtml(
+                  report.category || "業務区分未設定"
+                )}
+
+              </div>
+
+            </div>
+
+
+            <div class="ranking-helpful">
+
+              👍 ${helpful}
+
+            </div>
+
+          </li>
+        `;
+
+      })
+
+      .join("");
+
+
+  popularReports.className = "";
+
+  popularReports.innerHTML = `
+
+    <ol class="ranking-list">
+
+      ${rankingHtml}
+
+    </ol>
+
+  `;
+
+}
+
+
+// ホーム画面用データを取得
+async function loadHomeData() {
 
   try {
 
-    const today =
-      getLocalDateString();
-
-
-    const reportsQuery =
-      query(
-
-        collection(db, "reports"),
-
-        where("date", "==", today)
-
-      );
-
-
     const snapshot =
-      await getCountFromServer(
-        reportsQuery
+      await getDocs(
+        collection(db, "reports")
       );
 
 
-    const count =
-      snapshot.data().count;
+    const reports =
+      snapshot.docs.map((document) => ({
+
+        id: document.id,
+
+        ...document.data()
+
+      }));
 
 
-    todayCount.textContent =
-      `${count}件`;
+    displayTodayCount(reports);
 
-
-    if (todayCountMessage) {
-
-      if (count === 0) {
-
-        todayCountMessage.textContent =
-          "本日の投稿はまだありません。";
-
-      } else {
-
-        todayCountMessage.textContent =
-          "本日、新しい事例が共有されています。";
-
-      }
-
-    }
+    displayPopularReports(reports);
 
 
   } catch (error) {
 
     console.error(
-      "本日の投稿件数取得エラー:",
+      "ホーム画面読み込みエラー:",
       error
     );
 
@@ -108,16 +290,21 @@ async function loadTodayCount() {
       "取得失敗";
 
 
-    if (todayCountMessage) {
+    todayCountMessage.textContent =
+      "ページを再読み込みしてください。";
 
-      todayCountMessage.textContent =
-        "ページを再読み込みしてください。";
 
-    }
+    popularReports.className =
+      "ranking-message";
+
+
+    popularReports.innerHTML = `
+      人気事例の読み込みに失敗しました。
+    `;
 
   }
 
 }
 
 
-loadTodayCount();
+loadHomeData();
