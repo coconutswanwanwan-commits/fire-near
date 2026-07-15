@@ -5,16 +5,16 @@ import {
 
 import {
   collection,
+  getDocs,
   doc,
-  getDoc,
-  getDocs
+  getDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  onAuthStateChanged,
-  signOut
+  signOut,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 
@@ -46,15 +46,17 @@ const featuredReportCount =
   document.getElementById("featuredReportCount");
 
 
-const provider =
+const googleProvider =
   new GoogleAuthProvider();
 
-provider.setCustomParameters({
+
+googleProvider.setCustomParameters({
   prompt: "select_account"
 });
 
 
-function showStatus(
+// 状態メッセージ
+function showLoginStatus(
   message,
   type = ""
 ) {
@@ -64,89 +66,44 @@ function showStatus(
   loginStatus.className =
     "login-status";
 
-  if (type) {
-    loginStatus.classList.add(type);
+  if (type === "success") {
+    loginStatus.classList.add(
+      "success-message"
+    );
+  }
+
+  if (type === "error") {
+    loginStatus.classList.add(
+      "error-message"
+    );
   }
 }
 
 
-function showLoginScreen(
-  message =
-    "管理者用Googleアカウントでログインしてください。",
-  isError = false
-) {
-  loginSection.hidden =
-    false;
-
-  dashboard.hidden =
-    true;
-
-  loginButton.disabled =
-    false;
-
-  logoutButton.disabled =
-    false;
-
-  userName.textContent =
-    "";
-
-  userEmail.textContent =
-    "";
-
-  totalReportCount.textContent =
-    "-";
-
-  featuredReportCount.textContent =
-    "-";
-
-  showStatus(
-    message,
-    isError
-      ? "error-message"
-      : ""
-  );
-}
-
-
-function showDashboard(user) {
-  loginSection.hidden =
-    true;
-
-  dashboard.hidden =
-    false;
-
-  logoutButton.disabled =
-    false;
-
-  userName.textContent =
-    user.displayName ||
-    "名前未設定";
-
-  userEmail.textContent =
-    user.email ||
-    "メールアドレス未設定";
-}
-
-
+// 管理者権限確認
 async function checkAdmin(user) {
   if (!user) {
     return false;
   }
 
+  const adminReference =
+    doc(
+      db,
+      "admins",
+      user.uid
+    );
+
   const adminSnapshot =
     await getDoc(
-      doc(
-        db,
-        "admins",
-        user.uid
-      )
+      adminReference
     );
 
   return adminSnapshot.exists();
 }
 
 
-async function loadSummary() {
+// 管理画面の件数を読み込む
+async function loadDashboardStatistics() {
   totalReportCount.textContent =
     "読込中";
 
@@ -162,30 +119,29 @@ async function loadSummary() {
         )
       );
 
-    let featuredCount = 0;
-
-    snapshot.forEach(
-      reportDocument => {
-        const report =
-          reportDocument.data();
-
-        if (
-          report.featured === true
-        ) {
-          featuredCount += 1;
-        }
-      }
-    );
+    const reports =
+      snapshot.docs.map(
+        (document) => ({
+          id: document.id,
+          ...document.data()
+        })
+      );
 
     totalReportCount.textContent =
-      `${snapshot.size}件`;
+      `${reports.length}件`;
+
+    const featuredCount =
+      reports.filter(
+        (report) =>
+          report.featured === true
+      ).length;
 
     featuredReportCount.textContent =
       `${featuredCount}件`;
 
   } catch (error) {
     console.error(
-      "投稿件数取得エラー:",
+      "管理ダッシュボード集計エラー:",
       error
     );
 
@@ -198,46 +154,23 @@ async function loadSummary() {
 }
 
 
-async function login() {
+// Googleログイン
+async function loginWithGoogle() {
   loginButton.disabled =
     true;
 
-  showStatus(
+  loginButton.textContent =
+    "ログイン処理中...";
+
+  showLoginStatus(
     "Googleログイン画面を開いています..."
   );
 
   try {
-    const result =
-      await signInWithPopup(
-        auth,
-        provider
-      );
-
-    showStatus(
-      "管理者権限を確認しています..."
+    await signInWithPopup(
+      auth,
+      googleProvider
     );
-
-    const isAdmin =
-      await checkAdmin(
-        result.user
-      );
-
-    if (!isAdmin) {
-      await signOut(auth);
-
-      showLoginScreen(
-        "このGoogleアカウントには管理者権限がありません。",
-        true
-      );
-
-      return;
-    }
-
-    showDashboard(
-      result.user
-    );
-
-    await loadSummary();
 
   } catch (error) {
     console.error(
@@ -245,70 +178,54 @@ async function login() {
       error
     );
 
+    switch (error.code) {
+      case "auth/popup-closed-by-user":
+        showLoginStatus(
+          "ログイン画面が閉じられました。",
+          "error"
+        );
+        break;
+
+      case "auth/popup-blocked":
+        showLoginStatus(
+          "ポップアップがブロックされました。Safariの設定を確認してください。",
+          "error"
+        );
+        break;
+
+      case "auth/unauthorized-domain":
+        showLoginStatus(
+          "このドメインはFirebaseで許可されていません。",
+          "error"
+        );
+        break;
+
+      default:
+        showLoginStatus(
+          `ログインに失敗しました：${error.message}`,
+          "error"
+        );
+    }
+
     loginButton.disabled =
       false;
 
-    let message =
-      "Googleログインに失敗しました。";
-
-    if (
-      error.code ===
-      "auth/popup-closed-by-user"
-    ) {
-      message =
-        "Googleログインがキャンセルされました。";
-    }
-
-    if (
-      error.code ===
-      "auth/popup-blocked"
-    ) {
-      message =
-        "ログイン画面がブロックされました。Safariのポップアップを許可してください。";
-    }
-
-    if (
-      error.code ===
-      "auth/unauthorized-domain"
-    ) {
-      message =
-        "このWebサイトのドメインがFirebaseで許可されていません。";
-    }
-
-    if (
-      error.code ===
-      "auth/operation-not-allowed"
-    ) {
-      message =
-        "FirebaseでGoogleログインが有効になっていません。";
-    }
-
-    if (
-      error.code ===
-      "auth/network-request-failed"
-    ) {
-      message =
-        "通信に失敗しました。インターネット接続を確認してください。";
-    }
-
-    showStatus(
-      message,
-      "error-message"
-    );
+    loginButton.textContent =
+      "Googleアカウントでログイン";
   }
 }
 
 
+// ログアウト
 async function logout() {
   logoutButton.disabled =
     true;
 
+  logoutButton.textContent =
+    "ログアウト中...";
+
   try {
     await signOut(auth);
-
-    showLoginScreen(
-      "ログアウトしました。"
-    );
 
   } catch (error) {
     console.error(
@@ -316,38 +233,48 @@ async function logout() {
       error
     );
 
+    window.alert(
+      "ログアウトに失敗しました。"
+    );
+
     logoutButton.disabled =
       false;
 
-    showStatus(
-      "ログアウトに失敗しました。",
-      "error-message"
-    );
+    logoutButton.textContent =
+      "ログアウト";
   }
 }
 
 
-loginButton.addEventListener(
-  "click",
-  login
-);
-
-
-logoutButton.addEventListener(
-  "click",
-  logout
-);
-
-
+// ログイン状態を監視
 onAuthStateChanged(
   auth,
-  async user => {
+  async (user) => {
+
+    dashboard.hidden =
+      true;
+
+    loginSection.hidden =
+      false;
+
     if (!user) {
-      showLoginScreen();
+      loginButton.hidden =
+        false;
+
+      loginButton.disabled =
+        false;
+
+      loginButton.textContent =
+        "Googleアカウントでログイン";
+
+      showLoginStatus(
+        "ログインしていません。"
+      );
+
       return;
     }
 
-    showStatus(
+    showLoginStatus(
       "管理者権限を確認しています..."
     );
 
@@ -356,19 +283,45 @@ onAuthStateChanged(
         await checkAdmin(user);
 
       if (!isAdmin) {
-        await signOut(auth);
-
-        showLoginScreen(
+        showLoginStatus(
           "このGoogleアカウントには管理者権限がありません。",
-          true
+          "error"
+        );
+
+        loginButton.hidden =
+          true;
+
+        window.setTimeout(
+          async () => {
+            await signOut(auth);
+          },
+          1500
         );
 
         return;
       }
 
-      showDashboard(user);
+      userName.textContent =
+        user.displayName ||
+        "名前未設定";
 
-      await loadSummary();
+      userEmail.textContent =
+        user.email ||
+        "メール未設定";
+
+      loginSection.hidden =
+        true;
+
+      dashboard.hidden =
+        false;
+
+      logoutButton.disabled =
+        false;
+
+      logoutButton.textContent =
+        "ログアウト";
+
+      await loadDashboardStatistics();
 
     } catch (error) {
       console.error(
@@ -376,10 +329,22 @@ onAuthStateChanged(
         error
       );
 
-      showLoginScreen(
-        "管理者権限を確認できませんでした。Firestoreのadmins設定を確認してください。",
-        true
+      showLoginStatus(
+        "管理者権限の確認に失敗しました。",
+        "error"
       );
     }
   }
+);
+
+
+loginButton.addEventListener(
+  "click",
+  loginWithGoogle
+);
+
+
+logoutButton.addEventListener(
+  "click",
+  logout
 );
