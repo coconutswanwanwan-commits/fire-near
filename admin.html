@@ -2,7 +2,6 @@
 <html lang="ja">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -11,7 +10,7 @@
     >
 
     <title>
-        管理者ログイン | 消防ヒヤリハット共有システム
+        管理ダッシュボード | 消防ヒヤリハット共有システム
     </title>
 
     <link
@@ -20,7 +19,6 @@
     >
 
     <style>
-
         .admin-card {
             background: white;
             border-radius: 15px;
@@ -32,8 +30,8 @@
 
         .admin-description {
             margin-bottom: 20px;
-            line-height: 1.7;
             color: #555;
+            line-height: 1.7;
         }
 
         .google-login-button,
@@ -55,7 +53,7 @@
         }
 
         .logout-button {
-            margin-top: 15px;
+            margin-top: 18px;
             background: #616161;
         }
 
@@ -66,8 +64,18 @@
         }
 
         .login-status {
-            margin-top: 20px;
+            margin-top: 18px;
             line-height: 1.7;
+        }
+
+        .success-message {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .error-message {
+            color: #b71c1c;
+            font-weight: bold;
         }
 
         .user-information {
@@ -79,28 +87,109 @@
             overflow-wrap: anywhere;
         }
 
-        .uid-box {
-            margin-top: 8px;
-            padding: 10px;
-            border-radius: 8px;
+        .dashboard {
+            margin-top: 25px;
+        }
+
+        .dashboard-title {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            padding: 20px;
+            border-radius: 15px;
             background: white;
-            font-family: monospace;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .summary-label {
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .summary-number {
+            color: #0d47a1;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .admin-menu {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .admin-menu-button {
+            display: block;
+            min-height: 130px;
+            padding: 22px 12px;
+            border-radius: 15px;
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .admin-menu-icon {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .admin-menu-description {
+            display: block;
+            margin-top: 7px;
             font-size: 0.85rem;
-            overflow-wrap: anywhere;
+            font-weight: normal;
+            opacity: 0.95;
         }
 
-        .error-message {
-            color: #b71c1c;
-            font-weight: bold;
+        .post-management {
+            background: #1565c0;
         }
 
-        .success-message {
-            color: #2e7d32;
-            font-weight: bold;
+        .featured-management {
+            background: #ef6c00;
         }
 
+        .notice-management {
+            background: #00838f;
+        }
+
+        .statistics-management {
+            background: #2e7d32;
+        }
+
+        .admin-menu-button.disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .loading-message {
+            padding: 15px;
+            color: #666;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .summary-grid,
+            .admin-menu {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
-
 </head>
 
 <body>
@@ -108,25 +197,24 @@
 <div class="container">
 
     <header>
-
         <h1>
-            🔐 管理者ログイン
+            👨‍💼 管理ダッシュボード
         </h1>
 
         <p class="subTitle">
-            Fire Near 管理者ページ
+            Fire Near 管理者専用ページ
         </p>
-
     </header>
 
 
-    <section class="admin-card">
-
+    <section
+        class="admin-card"
+        id="loginSection"
+    >
         <p class="admin-description">
             管理者用Googleアカウントでログインしてください。
             一般職員はログインする必要はありません。
         </p>
-
 
         <button
             type="button"
@@ -136,49 +224,158 @@
             Googleアカウントでログイン
         </button>
 
-
         <div
             id="loginStatus"
             class="login-status"
         >
-            ログインしていません。
+            ログイン状態を確認しています...
         </div>
+    </section>
 
 
-        <div
-            id="userInformation"
-            class="user-information"
-            hidden
-        >
+    <main
+        id="dashboard"
+        class="dashboard"
+        hidden
+    >
 
-            <p>
-                <strong>ログイン名：</strong>
-                <span id="userName"></span>
-            </p>
+        <section class="admin-card">
 
-            <p>
-                <strong>メールアドレス：</strong>
-                <span id="userEmail"></span>
-            </p>
+            <h2 class="dashboard-title">
+                🔐 ログイン情報
+            </h2>
 
-            <p>
-                <strong>管理者UID：</strong>
-            </p>
+            <div class="user-information">
 
-            <div
-                id="userUid"
-                class="uid-box"
-            ></div>
+                <p>
+                    <strong>管理者名：</strong>
+                    <span id="userName"></span>
+                </p>
 
-            <p
-                style="
-                    margin-top:12px;
-                    font-size:0.9rem;
-                    color:#555;
-                "
-            >
-                このUIDを後ほどFirestoreの管理者登録に使用します。
-            </p>
+                <p>
+                    <strong>メールアドレス：</strong>
+                    <span id="userEmail"></span>
+                </p>
+
+                <p>
+                    <strong>権限：</strong>
+                    管理者
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <section class="summary-grid">
+
+            <div class="summary-card">
+
+                <div class="summary-label">
+                    総投稿件数
+                </div>
+
+                <div
+                    id="totalReportCount"
+                    class="summary-number"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <div class="summary-label">
+                    重要事例件数
+                </div>
+
+                <div
+                    id="featuredReportCount"
+                    class="summary-number"
+                >
+                    -
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="admin-card">
+
+            <h2 class="dashboard-title">
+                ⚙️ 管理メニュー
+            </h2>
+
+            <div class="admin-menu">
+
+                <a
+                    href="cases.html"
+                    class="admin-menu-button post-management"
+                >
+                    <span class="admin-menu-icon">
+                        📝
+                    </span>
+
+                    投稿管理
+
+                    <span class="admin-menu-description">
+                        投稿の確認・編集・削除
+                    </span>
+                </a>
+
+
+                <a
+                    href="cases.html"
+                    class="admin-menu-button featured-management"
+                >
+                    <span class="admin-menu-icon">
+                        📌
+                    </span>
+
+                    重要事例管理
+
+                    <span class="admin-menu-description">
+                        詳細画面から設定・解除
+                    </span>
+                </a>
+
+
+                <a
+                    href="#"
+                    class="admin-menu-button notice-management disabled"
+                    aria-disabled="true"
+                >
+                    <span class="admin-menu-icon">
+                        📢
+                    </span>
+
+                    お知らせ管理
+
+                    <span class="admin-menu-description">
+                        次回実装予定
+                    </span>
+                </a>
+
+
+                <a
+                    href="stats.html"
+                    class="admin-menu-button statistics-management"
+                >
+                    <span class="admin-menu-icon">
+                        📊
+                    </span>
+
+                    統計・CSV
+
+                    <span class="admin-menu-description">
+                        集計確認・CSV出力
+                    </span>
+                </a>
+
+            </div>
 
 
             <button
@@ -189,9 +386,9 @@
                 ログアウト
             </button>
 
-        </div>
+        </section>
 
-    </section>
+    </main>
 
 
     <div style="text-align:center; margin-top:20px;">
@@ -204,7 +401,7 @@
 
 
     <footer>
-        Version 0.7.0
+        Version 1.2.0
     </footer>
 
 </div>
@@ -212,7 +409,7 @@
 
 <script
     type="module"
-    src="admin.js?v=070"
+    src="admin.js?v=120"
 ></script>
 
 </body>
