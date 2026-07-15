@@ -10,13 +10,217 @@
     >
 
     <title>
-        事例一覧 | 消防ヒヤリハット共有システム
+        投稿管理 | 消防ヒヤリハット共有システム
     </title>
 
     <link
         rel="stylesheet"
         href="style.css"
     >
+
+    <style>
+        .management-card {
+            background: white;
+            border-radius: 15px;
+            padding: 22px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .management-title {
+            margin-bottom: 18px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .filter-item label {
+            margin-top: 0;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .filter-button,
+        .reset-button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .filter-button {
+            background: #1565c0;
+        }
+
+        .reset-button {
+            background: #616161;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .result-count {
+            color: #0d47a1;
+            font-weight: bold;
+        }
+
+        .status-message {
+            padding: 16px;
+            border-radius: 12px;
+            background: #f4f7fb;
+            line-height: 1.7;
+        }
+
+        .error-message {
+            color: #b71c1c;
+            font-weight: bold;
+        }
+
+        .case-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .case-card {
+            position: relative;
+            padding: 20px;
+            border: 1px solid #d9e1ea;
+            border-radius: 14px;
+            background: white;
+        }
+
+        .case-card.featured {
+            border: 2px solid #ef6c00;
+            background: #fffaf3;
+        }
+
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .case-title {
+            font-size: 1.15rem;
+            line-height: 1.5;
+        }
+
+        .featured-mark {
+            flex-shrink: 0;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: #ef6c00;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .case-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .meta-chip {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: #eef3f8;
+            font-size: 0.85rem;
+        }
+
+        .case-summary {
+            margin-bottom: 16px;
+            color: #444;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .case-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .case-action-button {
+            display: block;
+            width: 100%;
+            padding: 12px 8px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .detail-button {
+            background: #1565c0;
+        }
+
+        .featured-button {
+            background: #ef6c00;
+        }
+
+        .delete-button {
+            background: #c62828;
+        }
+
+        .empty-message {
+            padding: 28px 15px;
+            border-radius: 12px;
+            background: #f4f7fb;
+            text-align: center;
+            color: #555;
+        }
+
+        .back-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-actions,
+            .case-actions {
+                grid-template-columns: 1fr;
+                display: grid;
+            }
+
+            .result-header,
+            .case-header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .featured-mark {
+                align-self: flex-start;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -24,49 +228,183 @@
 <div class="container">
 
     <header>
-
         <h1>
-            📚 ヒヤリハット事例
+            📝 投稿管理
         </h1>
 
         <p class="subTitle">
-            新しい事例から順番に表示しています。
+            投稿の確認・検索・重要事例設定・削除
         </p>
-
     </header>
 
 
-    <section class="news">
+    <section class="management-card">
 
-        <div
-            id="caseCount"
-            style="margin-bottom:15px; font-weight:bold;"
-        >
-            読み込み中...
+        <h2 class="management-title">
+            🔎 絞り込み
+        </h2>
+
+        <div class="filter-grid">
+
+            <div class="filter-item">
+                <label for="keywordInput">
+                    キーワード
+                </label>
+
+                <input
+                    type="search"
+                    id="keywordInput"
+                    placeholder="タイトル・内容・所属など"
+                >
+            </div>
+
+
+            <div class="filter-item">
+                <label for="levelFilter">
+                    レベル
+                </label>
+
+                <select id="levelFilter">
+                    <option value="">
+                        すべて
+                    </option>
+                    <option value="1">
+                        レベル1
+                    </option>
+                    <option value="2">
+                        レベル2
+                    </option>
+                    <option value="3">
+                        レベル3
+                    </option>
+                    <option value="4">
+                        レベル4
+                    </option>
+                </select>
+            </div>
+
+
+            <div class="filter-item">
+                <label for="departmentFilter">
+                    所属
+                </label>
+
+                <select id="departmentFilter">
+                    <option value="">
+                        すべて
+                    </option>
+                </select>
+            </div>
+
+
+            <div class="filter-item">
+                <label for="featuredFilter">
+                    重要事例
+                </label>
+
+                <select id="featuredFilter">
+                    <option value="">
+                        すべて
+                    </option>
+                    <option value="featured">
+                        重要事例のみ
+                    </option>
+                    <option value="normal">
+                        通常事例のみ
+                    </option>
+                </select>
+            </div>
+
+
+            <div class="filter-item">
+                <label for="startDate">
+                    開始日
+                </label>
+
+                <input
+                    type="date"
+                    id="startDate"
+                >
+            </div>
+
+
+            <div class="filter-item">
+                <label for="endDate">
+                    終了日
+                </label>
+
+                <input
+                    type="date"
+                    id="endDate"
+                >
+            </div>
+
         </div>
 
-        <div id="caseList">
 
-            読み込み中...
+        <div class="filter-actions">
+
+            <button
+                type="button"
+                id="filterButton"
+                class="filter-button"
+            >
+                絞り込む
+            </button>
+
+            <button
+                type="button"
+                id="resetButton"
+                class="reset-button"
+            >
+                条件をリセット
+            </button>
 
         </div>
 
     </section>
 
 
-    <div style="text-align:center; margin-top:20px;">
+    <main class="management-card">
 
-        <a href="post.html">
-            📝 新規投稿
+        <div class="result-header">
+
+            <h2>
+                📋 投稿一覧
+            </h2>
+
+            <div
+                id="resultCount"
+                class="result-count"
+            >
+                0件
+            </div>
+
+        </div>
+
+
+        <div
+            id="statusMessage"
+            class="status-message"
+        >
+            投稿を読み込んでいます...
+        </div>
+
+
+        <div
+            id="caseList"
+            class="case-list"
+            hidden
+        ></div>
+
+    </main>
+
+
+    <div class="back-links">
+
+        <a href="admin.html">
+            👨‍💼 管理画面へ戻る
         </a>
-
-        ｜
-
-        <a href="list.html">
-            🔍 検索・絞り込み
-        </a>
-
-        ｜
 
         <a href="index.html">
             🏠 ホームへ戻る
@@ -76,9 +414,7 @@
 
 
     <footer>
-
-        Version 0.5.2
-
+        Version 1.3.0
     </footer>
 
 </div>
@@ -86,7 +422,7 @@
 
 <script
     type="module"
-    src="cases.js?v=052"
+    src="cases.js?v=130"
 ></script>
 
 </body>
