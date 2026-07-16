@@ -47,7 +47,8 @@ function convertToDate(value) {
   }
 
   if (
-    typeof value.toDate === "function"
+    typeof value.toDate ===
+    "function"
   ) {
     return value.toDate();
   }
@@ -100,6 +101,46 @@ function formatDateTime(value) {
 }
 
 
+// お知らせの日付を表示
+function formatNoticeDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  if (
+    typeof value ===
+    "string"
+  ) {
+    const parts =
+      value.split("-");
+
+    if (parts.length === 3) {
+      return (
+        `${parts[0]}年` +
+        `${parts[1]}月` +
+        `${parts[2]}日`
+      );
+    }
+  }
+
+  const date =
+    convertToDate(value);
+
+  if (!date) {
+    return "";
+  }
+
+  return date.toLocaleDateString(
+    "ja-JP",
+    {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric"
+    }
+  );
+}
+
+
 // 順位マーク
 function getRankingMark(index) {
   if (index === 0) {
@@ -140,18 +181,22 @@ function displayTodayCount(reports) {
 
 
   const count =
-    reports.filter((report) => {
-      const createdDate =
-        convertToDate(
-          report.createdAt
-        );
+    reports.filter(
+      report => {
+        const createdDate =
+          convertToDate(
+            report.createdAt
+          );
 
-      return (
-        createdDate &&
-        createdDate >= startOfToday &&
-        createdDate < startOfTomorrow
-      );
-    }).length;
+        return (
+          createdDate &&
+          createdDate >=
+            startOfToday &&
+          createdDate <
+            startOfTomorrow
+        );
+      }
+    ).length;
 
 
   if (todayCount) {
@@ -174,31 +219,40 @@ function displayFeaturedReports(reports) {
   const featured =
     reports
 
-      .filter((report) =>
-        report.featured === true
+      .filter(
+        report =>
+          report.featured === true
       )
 
-      .sort((first, second) => {
-        const firstDate =
-          getDateNumber(
-            first.featuredAt
-          ) ||
-          getDateNumber(
-            first.createdAt
+      .sort(
+        (first, second) => {
+          const firstDate =
+            getDateNumber(
+              first.featuredAt
+            ) ||
+            getDateNumber(
+              first.createdAt
+            );
+
+          const secondDate =
+            getDateNumber(
+              second.featuredAt
+            ) ||
+            getDateNumber(
+              second.createdAt
+            );
+
+          return (
+            secondDate -
+            firstDate
           );
+        }
+      )
 
-        const secondDate =
-          getDateNumber(
-            second.featuredAt
-          ) ||
-          getDateNumber(
-            second.createdAt
-          );
-
-        return secondDate - firstDate;
-      })
-
-      .slice(0, 5);
+      .slice(
+        0,
+        5
+      );
 
 
   if (featured.length === 0) {
@@ -211,59 +265,76 @@ function displayFeaturedReports(reports) {
   }
 
 
-  featuredSection.hidden =
-    false;
+  if (featuredSection) {
+    featuredSection.hidden =
+      false;
+  }
+
+
+  if (!featuredReports) {
+    return;
+  }
 
 
   featuredReports.innerHTML =
     featured
 
-      .map((report) => {
-        return `
-          <article class="featured-card">
+      .map(
+        report => {
+          return `
+            <article class="featured-card">
 
-            <a
-              class="featured-title"
-              href="detail.html?id=${encodeURIComponent(report.id)}"
-            >
-              📌 ${escapeHtml(
-                report.title ||
-                "タイトル未設定"
-              )}
-            </a>
+              <a
+                class="featured-title"
+                href="detail.html?id=${encodeURIComponent(
+                  report.id
+                )}"
+              >
+                📌 ${escapeHtml(
+                  report.title ||
+                  "タイトル未設定"
+                )}
+              </a>
 
-            <div class="featured-info">
+              <div class="featured-info">
 
-              <strong>所属：</strong>
+                <strong>
+                  所属：
+                </strong>
 
-              ${escapeHtml(
-                report.department ||
-                "未設定"
-              )}
+                ${escapeHtml(
+                  report.department ||
+                  "未設定"
+                )}
 
-              <br>
+                <br>
 
-              <strong>業務区分：</strong>
+                <strong>
+                  業務区分：
+                </strong>
 
-              ${escapeHtml(
-                report.category ||
-                "未設定"
-              )}
+                ${escapeHtml(
+                  report.category ||
+                  "未設定"
+                )}
 
-              <br>
+                <br>
 
-              <strong>レベル：</strong>
+                <strong>
+                  レベル：
+                </strong>
 
-              ${escapeHtml(
-                report.level ||
-                "未設定"
-              )}
+                ${escapeHtml(
+                  report.level ||
+                  "未設定"
+                )}
 
-            </div>
+              </div>
 
-          </article>
-        `;
-      })
+            </article>
+          `;
+        }
+      )
 
       .join("");
 }
@@ -271,41 +342,51 @@ function displayFeaturedReports(reports) {
 
 // 人気事例を表示
 function displayPopularReports(reports) {
+  if (!popularReports) {
+    return;
+  }
+
   const ranking =
     [...reports]
 
-      .filter((report) =>
-        Number(
-          report.helpful || 0
-        ) > 0
+      .filter(
+        report =>
+          Number(
+            report.helpful || 0
+          ) > 0
       )
 
-      .sort((first, second) => {
-        const helpfulDifference =
-          Number(
-            second.helpful || 0
-          ) -
-          Number(
-            first.helpful || 0
+      .sort(
+        (first, second) => {
+          const helpfulDifference =
+            Number(
+              second.helpful || 0
+            ) -
+            Number(
+              first.helpful || 0
+            );
+
+          if (
+            helpfulDifference !== 0
+          ) {
+            return helpfulDifference;
+          }
+
+          return (
+            getDateNumber(
+              second.createdAt
+            ) -
+            getDateNumber(
+              first.createdAt
+            )
           );
-
-        if (
-          helpfulDifference !== 0
-        ) {
-          return helpfulDifference;
         }
+      )
 
-        return (
-          getDateNumber(
-            second.createdAt
-          ) -
-          getDateNumber(
-            first.createdAt
-          )
-        );
-      })
-
-      .slice(0, 5);
+      .slice(
+        0,
+        5
+      );
 
 
   if (ranking.length === 0) {
@@ -322,56 +403,60 @@ function displayPopularReports(reports) {
   const rankingHtml =
     ranking
 
-      .map((report, index) => {
-        const helpful =
-          Number(
-            report.helpful || 0
-          );
+      .map(
+        (report, index) => {
+          const helpful =
+            Number(
+              report.helpful || 0
+            );
 
-        return `
-          <li class="ranking-item">
+          return `
+            <li class="ranking-item">
 
-            <div class="ranking-number">
-              ${getRankingMark(index)}
-            </div>
+              <div class="ranking-number">
+                ${getRankingMark(index)}
+              </div>
 
-            <div class="ranking-content">
+              <div class="ranking-content">
 
-              <a
-                class="ranking-title"
-                href="detail.html?id=${encodeURIComponent(report.id)}"
-              >
-                ${escapeHtml(
-                  report.title ||
-                  "タイトル未設定"
-                )}
-              </a>
+                <a
+                  class="ranking-title"
+                  href="detail.html?id=${encodeURIComponent(
+                    report.id
+                  )}"
+                >
+                  ${escapeHtml(
+                    report.title ||
+                    "タイトル未設定"
+                  )}
+                </a>
 
-              <div class="ranking-info">
+                <div class="ranking-info">
 
-                ${escapeHtml(
-                  report.department ||
-                  "所属未設定"
-                )}
+                  ${escapeHtml(
+                    report.department ||
+                    "所属未設定"
+                  )}
 
-                ／
+                  ／
 
-                ${escapeHtml(
-                  report.category ||
-                  "業務区分未設定"
-                )}
+                  ${escapeHtml(
+                    report.category ||
+                    "業務区分未設定"
+                  )}
+
+                </div>
 
               </div>
 
-            </div>
+              <div class="ranking-helpful">
+                👍 ${helpful}
+              </div>
 
-            <div class="ranking-helpful">
-              👍 ${helpful}
-            </div>
-
-          </li>
-        `;
-      })
+            </li>
+          `;
+        }
+      )
 
       .join("");
 
@@ -387,7 +472,205 @@ function displayPopularReports(reports) {
 }
 
 
-// Firestoreからお知らせを取得
+// お知らせを並び替え
+function sortNotices(notices) {
+  return [...notices].sort(
+    (first, second) => {
+      const firstOrder =
+        Number(first.order) || 0;
+
+      const secondOrder =
+        Number(second.order) || 0;
+
+      if (
+        firstOrder !==
+        secondOrder
+      ) {
+        return (
+          firstOrder -
+          secondOrder
+        );
+      }
+
+      const firstDate =
+        String(
+          first.displayDate ||
+          first.date ||
+          ""
+        );
+
+      const secondDate =
+        String(
+          second.displayDate ||
+          second.date ||
+          ""
+        );
+
+      if (
+        firstDate !==
+        secondDate
+      ) {
+        return secondDate.localeCompare(
+          firstDate
+        );
+      }
+
+      return (
+        getDateNumber(
+          second.createdAt
+        ) -
+        getDateNumber(
+          first.createdAt
+        )
+      );
+    }
+  );
+}
+
+
+// 複数のお知らせを表示
+function displayNotices(notices) {
+  if (!noticeContent) {
+    return;
+  }
+
+  noticeContent.className =
+    "";
+
+  noticeContent.innerHTML =
+    notices
+
+      .map(
+        notice => {
+          const title =
+            notice.title ||
+            "お知らせ";
+
+          const body =
+            notice.content ||
+            notice.body ||
+            notice.message ||
+            "";
+
+          const date =
+            formatNoticeDate(
+              notice.displayDate ||
+              notice.date
+            );
+
+          const dateHtml =
+            date
+              ? `
+                <div class="notice-updated">
+                  ${escapeHtml(date)}
+                </div>
+              `
+              : "";
+
+          return `
+            <article
+              style="
+                padding: 15px 0;
+                border-bottom:
+                  1px solid #d9e1ea;
+              "
+            >
+
+              <div class="notice-title">
+                ${escapeHtml(title)}
+              </div>
+
+              <p class="notice-body">
+                ${escapeHtml(body)}
+              </p>
+
+              ${dateHtml}
+
+            </article>
+          `;
+        }
+      )
+
+      .join("");
+}
+
+
+// 以前のsettings/noticeを表示
+async function displayLegacyNotice() {
+  const legacySnapshot =
+    await getDoc(
+      doc(
+        db,
+        "settings",
+        "notice"
+      )
+    );
+
+  if (
+    legacySnapshot.exists()
+  ) {
+    const data =
+      legacySnapshot.data();
+
+    const title =
+      data.title ||
+      "お知らせ";
+
+    const body =
+      data.body ||
+      data.content ||
+      "現在、お知らせはありません。";
+
+    const updatedDate =
+      formatDateTime(
+        data.updatedAt
+      );
+
+    const updatedHtml =
+      updatedDate
+        ? `
+          <div class="notice-updated">
+            最終更新：
+            ${escapeHtml(updatedDate)}
+          </div>
+        `
+        : "";
+
+    noticeContent.className =
+      "";
+
+    noticeContent.innerHTML = `
+      <div class="notice-title">
+        ${escapeHtml(title)}
+      </div>
+
+      <p class="notice-body">
+        ${escapeHtml(body)}
+      </p>
+
+      ${updatedHtml}
+    `;
+
+    return;
+  }
+
+
+  noticeContent.className =
+    "";
+
+  noticeContent.innerHTML = `
+    <div class="notice-title">
+      Fire Nearへようこそ
+    </div>
+
+    <p class="notice-body">
+      気付いたヒヤリハットは積極的に共有しましょう。
+    </p>
+  `;
+}
+
+
+// Firestoreから複数のお知らせを取得
 async function loadNotice() {
   if (!noticeContent) {
     return;
@@ -402,80 +685,49 @@ async function loadNotice() {
 
 
   try {
-    const noticeReference =
-      doc(
-        db,
-        "settings",
-        "notice"
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "notices"
+        )
       );
 
 
-    const noticeSnapshot =
-      await getDoc(
-        noticeReference
+    const notices =
+      snapshot.docs
+
+        .map(
+          noticeDocument => ({
+            id:
+              noticeDocument.id,
+
+            ...noticeDocument.data()
+          })
+        )
+
+        .filter(
+          notice =>
+            notice.published !== false
+        );
+
+
+    const sortedNotices =
+      sortNotices(notices);
+
+
+    if (
+      sortedNotices.length > 0
+    ) {
+      displayNotices(
+        sortedNotices
       );
-
-
-    if (!noticeSnapshot.exists()) {
-      noticeContent.className =
-        "";
-
-      noticeContent.innerHTML = `
-        <div class="notice-title">
-          Fire Nearへようこそ
-        </div>
-
-        <p class="notice-body">
-          気付いたヒヤリハットは積極的に共有しましょう。
-        </p>
-      `;
 
       return;
     }
 
 
-    const data =
-      noticeSnapshot.data();
-
-
-    const title =
-      data.title ||
-      "お知らせ";
-
-
-    const body =
-      data.body ||
-      "現在、お知らせはありません。";
-
-
-    const updatedDate =
-      formatDateTime(
-        data.updatedAt
-      );
-
-
-    const updatedHtml =
-      updatedDate
-        ? `
-          <div class="notice-updated">
-            最終更新：${escapeHtml(updatedDate)}
-          </div>
-        `
-        : "";
-
-
-    noticeContent.className =
-      "";
-
-    noticeContent.innerHTML = `
-      <div class="notice-title">
-        ${escapeHtml(title)}
-      </div>
-
-      <p class="notice-body">${escapeHtml(body)}</p>
-
-      ${updatedHtml}
-    `;
+    await displayLegacyNotice();
 
   } catch (error) {
     console.error(
@@ -484,11 +736,21 @@ async function loadNotice() {
     );
 
 
-    noticeContent.className =
-      "notice-error";
+    try {
+      await displayLegacyNotice();
 
-    noticeContent.textContent =
-      "お知らせの読み込みに失敗しました。";
+    } catch (legacyError) {
+      console.error(
+        "従来のお知らせ読み込みエラー:",
+        legacyError
+      );
+
+      noticeContent.className =
+        "notice-error";
+
+      noticeContent.textContent =
+        "お知らせの読み込みに失敗しました。";
+    }
   }
 }
 
@@ -507,8 +769,10 @@ async function loadReports() {
 
     const reports =
       snapshot.docs.map(
-        (document) => ({
-          id: document.id,
+        document => ({
+          id:
+            document.id,
+
           ...document.data()
         })
       );
