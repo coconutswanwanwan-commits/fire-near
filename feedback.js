@@ -15,6 +15,9 @@ const feedbackForm =
 const formArea =
   document.getElementById("formArea");
 
+const confirmationArea =
+  document.getElementById("confirmationArea");
+
 const completionArea =
   document.getElementById("completionArea");
 
@@ -44,6 +47,38 @@ const characterCount =
 
 const submitButton =
   document.getElementById("submitButton");
+
+const editButton =
+  document.getElementById("editButton");
+
+const finalSubmitButton =
+  document.getElementById("finalSubmitButton");
+
+const newFeedbackButton =
+  document.getElementById("newFeedbackButton");
+
+
+const confirmType =
+  document.getElementById("confirmType");
+
+const confirmPage =
+  document.getElementById("confirmPage");
+
+const confirmTitle =
+  document.getElementById("confirmTitle");
+
+const confirmContent =
+  document.getElementById("confirmContent");
+
+const confirmName =
+  document.getElementById("confirmName");
+
+const confirmEmail =
+  document.getElementById("confirmEmail");
+
+
+let pendingFeedbackData =
+  null;
 
 
 function showStatus(
@@ -171,18 +206,6 @@ function getCurrentPageInformation() {
 }
 
 
-function validateEmail() {
-  const email =
-    emailInput.value.trim();
-
-  if (!email) {
-    return true;
-  }
-
-  return emailInput.checkValidity();
-}
-
-
 function updateCharacterCount() {
   const count =
     contentInput.value.length;
@@ -192,79 +215,192 @@ function updateCharacterCount() {
 }
 
 
-async function submitFeedback(event) {
-  event.preventDefault();
+function displayValue(value) {
+  const text =
+    String(
+      value ?? ""
+    ).trim();
 
-  const type =
-    typeInput.value;
-
-  const page =
-    pageInput.value;
-
-  const title =
-    titleInput.value.trim();
-
-  const content =
-    contentInput.value.trim();
-
-  const name =
-    nameInput.value.trim();
-
-  const email =
-    emailInput.value.trim();
+  return text ||
+    "未入力";
+}
 
 
-  if (!type) {
+function collectFormData() {
+  return {
+    type:
+      typeInput.value,
+
+    page:
+      pageInput.value,
+
+    title:
+      titleInput.value.trim(),
+
+    content:
+      contentInput.value.trim(),
+
+    name:
+      nameInput.value.trim(),
+
+    email:
+      emailInput.value.trim()
+  };
+}
+
+
+function validateFormData(data) {
+  if (!data.type) {
     alert(
       "種類を選択してください。"
     );
 
     typeInput.focus();
-    return;
+    return false;
   }
 
-
-  if (!page) {
+  if (!data.page) {
     alert(
       "発生した画面を選択してください。"
     );
 
     pageInput.focus();
-    return;
+    return false;
   }
 
-
-  if (!title) {
+  if (!data.title) {
     alert(
       "件名を入力してください。"
     );
 
     titleInput.focus();
-    return;
+    return false;
   }
 
-
-  if (!content) {
+  if (!data.content) {
     alert(
       "詳しい内容を入力してください。"
     );
 
     contentInput.focus();
-    return;
+    return false;
   }
 
-
-  if (!validateEmail()) {
+  if (
+    data.email &&
+    !emailInput.checkValidity()
+  ) {
     alert(
       "メールアドレスの形式を確認してください。"
     );
 
     emailInput.focus();
+    return false;
+  }
+
+  return true;
+}
+
+
+function renderConfirmation(data) {
+  confirmType.textContent =
+    displayValue(
+      data.type
+    );
+
+  confirmPage.textContent =
+    displayValue(
+      data.page
+    );
+
+  confirmTitle.textContent =
+    displayValue(
+      data.title
+    );
+
+  confirmContent.textContent =
+    displayValue(
+      data.content
+    );
+
+  confirmName.textContent =
+    displayValue(
+      data.name
+    );
+
+  confirmEmail.textContent =
+    displayValue(
+      data.email
+    );
+}
+
+
+function showConfirmation() {
+  const data =
+    collectFormData();
+
+  if (!validateFormData(data)) {
     return;
   }
 
+  pendingFeedbackData =
+    data;
 
-  submitButton.disabled =
+  renderConfirmation(data);
+
+  hideStatus();
+
+  formArea.hidden =
+    true;
+
+  confirmationArea.hidden =
+    false;
+
+  completionArea.hidden =
+    true;
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+
+function returnToForm() {
+  confirmationArea.hidden =
+    true;
+
+  completionArea.hidden =
+    true;
+
+  formArea.hidden =
+    false;
+
+  hideStatus();
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  titleInput.focus();
+}
+
+
+async function submitFeedback() {
+  if (!pendingFeedbackData) {
+    showStatus(
+      "送信内容を確認できませんでした。入力画面へ戻ってください。",
+      "error-message"
+    );
+
+    return;
+  }
+
+  finalSubmitButton.disabled =
+    true;
+
+  editButton.disabled =
     true;
 
   showStatus(
@@ -283,12 +419,7 @@ async function submitFeedback(event) {
         "feedback"
       ),
       {
-        type,
-        page,
-        title,
-        content,
-        name,
-        email,
+        ...pendingFeedbackData,
 
         status:
           "未対応",
@@ -338,9 +469,19 @@ async function submitFeedback(event) {
     );
 
 
+    feedbackForm.reset();
+
+    pendingFeedbackData =
+      null;
+
+    updateCharacterCount();
+
     hideStatus();
 
     formArea.hidden =
+      true;
+
+    confirmationArea.hidden =
       true;
 
     completionArea.hidden =
@@ -360,13 +501,46 @@ async function submitFeedback(event) {
     showStatus(
       `送信に失敗しました。
 エラーコード：${error.code || "不明"}
+詳細：${error.message || "不明"}
 通信状態を確認して、もう一度お試しください。`,
       "error-message"
     );
 
-    submitButton.disabled =
+  } finally {
+    finalSubmitButton.disabled =
+      false;
+
+    editButton.disabled =
       false;
   }
+}
+
+
+function startNewFeedback() {
+  feedbackForm.reset();
+
+  pendingFeedbackData =
+    null;
+
+  updateCharacterCount();
+
+  formArea.hidden =
+    false;
+
+  confirmationArea.hidden =
+    true;
+
+  completionArea.hidden =
+    true;
+
+  hideStatus();
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  typeInput.focus();
 }
 
 
@@ -378,7 +552,29 @@ contentInput.addEventListener(
 
 feedbackForm.addEventListener(
   "submit",
+  event => {
+    event.preventDefault();
+
+    showConfirmation();
+  }
+);
+
+
+editButton.addEventListener(
+  "click",
+  returnToForm
+);
+
+
+finalSubmitButton.addEventListener(
+  "click",
   submitFeedback
+);
+
+
+newFeedbackButton.addEventListener(
+  "click",
+  startNewFeedback
 );
 
 
