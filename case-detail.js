@@ -4,6 +4,10 @@ import {
 } from "./firebase.js";
 
 import {
+  setCategoryOptions
+} from "./master-data.js";
+
+import {
   doc,
   getDoc,
   updateDoc,
@@ -92,6 +96,24 @@ const reportId =
 let currentReport = null;
 
 
+function initializeCategoryOptions(
+  selectedValue = ""
+) {
+  setCategoryOptions(
+    categoryInput,
+    {
+      firstOptionText:
+        "選択してください",
+
+      selectedValue,
+
+      preserveUnknownValue:
+        true
+    }
+  );
+}
+
+
 function showStatus(
   message,
   type = ""
@@ -128,10 +150,12 @@ function formatDate(value) {
     typeof value.toDate ===
     "function"
   ) {
-    date = value.toDate();
+    date =
+      value.toDate();
 
   } else {
-    date = new Date(value);
+    date =
+      new Date(value);
   }
 
   if (
@@ -222,32 +246,45 @@ function getImageUrls(report) {
 
   const urls = [];
 
-  candidates.forEach((candidate) => {
-    if (!candidate) {
-      return;
-    }
+  candidates.forEach(
+    candidate => {
+      if (!candidate) {
+        return;
+      }
 
-    if (typeof candidate === "string") {
-      urls.push(candidate);
-      return;
-    }
+      if (
+        typeof candidate ===
+        "string"
+      ) {
+        urls.push(candidate);
+        return;
+      }
 
-    if (Array.isArray(candidate)) {
-      candidate.forEach((item) => {
-        if (typeof item === "string") {
-          urls.push(item);
-          return;
-        }
+      if (
+        Array.isArray(candidate)
+      ) {
+        candidate.forEach(
+          item => {
+            if (
+              typeof item ===
+              "string"
+            ) {
+              urls.push(item);
+              return;
+            }
 
-        if (
-          item &&
-          typeof item.url === "string"
-        ) {
-          urls.push(item.url);
-        }
-      });
+            if (
+              item &&
+              typeof item.url ===
+                "string"
+            ) {
+              urls.push(item.url);
+            }
+          }
+        );
+      }
     }
-  });
+  );
 
   return [
     ...new Set(
@@ -271,48 +308,58 @@ function renderImages(report) {
     return;
   }
 
-  urls.forEach((url, index) => {
-    const image =
-      document.createElement("img");
+  urls.forEach(
+    (url, index) => {
+      const image =
+        document.createElement(
+          "img"
+        );
 
-    image.src =
-      url;
+      image.src =
+        url;
 
-    image.alt =
-      `添付画像 ${index + 1}`;
+      image.alt =
+        `添付画像 ${index + 1}`;
 
-    image.loading =
-      "lazy";
+      image.loading =
+        "lazy";
 
-    image.addEventListener(
-      "error",
-      () => {
-        image.remove();
+      image.addEventListener(
+        "error",
+        () => {
+          image.remove();
 
-        const link =
-          document.createElement("a");
+          const link =
+            document.createElement(
+              "a"
+            );
 
-        link.href =
-          url;
+          link.href =
+            url;
 
-        link.target =
-          "_blank";
+          link.target =
+            "_blank";
 
-        link.rel =
-          "noopener noreferrer";
+          link.rel =
+            "noopener noreferrer";
 
-        link.className =
-          "image-link";
+          link.className =
+            "image-link";
 
-        link.textContent =
-          `添付ファイル ${index + 1} を開く`;
+          link.textContent =
+            `添付ファイル ${index + 1} を開く`;
 
-        imageArea.appendChild(link);
-      }
-    );
+          imageArea.appendChild(
+            link
+          );
+        }
+      );
 
-    imageArea.appendChild(image);
-  });
+      imageArea.appendChild(
+        image
+      );
+    }
+  );
 }
 
 
@@ -347,9 +394,9 @@ function renderReport(report) {
   levelInput.value =
     getLevel(report);
 
-  categoryInput.value =
-    report.category ||
-    "";
+  initializeCategoryOptions(
+    report.category || ""
+  );
 
   locationInput.value =
     report.location ||
@@ -432,7 +479,9 @@ async function loadReport() {
         )
       );
 
-    if (!reportSnapshot.exists()) {
+    if (
+      !reportSnapshot.exists()
+    ) {
       showStatus(
         "指定された投稿は存在しません。",
         "error-message"
@@ -478,6 +527,15 @@ async function saveReport(event) {
     return;
   }
 
+  if (!categoryInput.value) {
+    alert(
+      "業務区分を選択してください。"
+    );
+
+    categoryInput.focus();
+    return;
+  }
+
   saveButton.disabled =
     true;
 
@@ -500,6 +558,7 @@ async function saveReport(event) {
       ),
       {
         title,
+
         department:
           departmentInput.value.trim(),
 
@@ -507,7 +566,7 @@ async function saveReport(event) {
           levelInput.value,
 
         category:
-          categoryInput.value.trim(),
+          categoryInput.value,
 
         location:
           locationInput.value.trim(),
@@ -534,6 +593,7 @@ async function saveReport(event) {
 
     currentReport = {
       ...currentReport,
+
       title,
 
       department:
@@ -543,7 +603,7 @@ async function saveReport(event) {
         levelInput.value,
 
       category:
-        categoryInput.value.trim(),
+        categoryInput.value,
 
       location:
         locationInput.value.trim(),
@@ -563,6 +623,10 @@ async function saveReport(event) {
       featured:
         featuredInput.checked
     };
+
+    initializeCategoryOptions(
+      categoryInput.value
+    );
 
     featuredButton.textContent =
       featuredInput.checked
@@ -728,6 +792,9 @@ async function removeReport() {
 }
 
 
+initializeCategoryOptions();
+
+
 detailForm.addEventListener(
   "submit",
   saveReport
@@ -748,7 +815,7 @@ deleteButton.addEventListener(
 
 onAuthStateChanged(
   auth,
-  async (user) => {
+  async user => {
     try {
       const isAdmin =
         await checkAdmin(user);
