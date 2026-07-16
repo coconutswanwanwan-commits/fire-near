@@ -4,6 +4,10 @@ import {
 } from "./firebase.js";
 
 import {
+  setCategoryOptions
+} from "./master-data.js";
+
+import {
   doc,
   getDoc,
   updateDoc,
@@ -36,6 +40,9 @@ const saveButton =
 const cancelLink =
   document.getElementById("cancelLink");
 
+const categoryInput =
+  document.getElementById("category");
+
 
 let currentAdminUser = null;
 
@@ -43,6 +50,25 @@ let currentAdminUser = null;
 // 入力欄を取得
 function getInput(id) {
   return document.getElementById(id);
+}
+
+
+// 業務区分を設定
+function initializeCategoryOptions(
+  selectedValue = ""
+) {
+  setCategoryOptions(
+    categoryInput,
+    {
+      firstOptionText:
+        "選択してください",
+
+      selectedValue,
+
+      preserveUnknownValue:
+        true
+    }
+  );
 }
 
 
@@ -101,8 +127,9 @@ function fillForm(data) {
   getInput("department").value =
     data.department || "";
 
-  getInput("category").value =
-    data.category || "";
+  initializeCategoryOptions(
+    data.category || ""
+  );
 
   getInput("place").value =
     data.place || "";
@@ -203,7 +230,7 @@ function createUpdateData() {
       getInput("department").value,
 
     category:
-      getInput("category").value,
+      categoryInput.value,
 
     place:
       getInput("place").value.trim(),
@@ -318,6 +345,10 @@ async function saveReport(event) {
       "💾 変更を保存";
   }
 }
+
+
+// 初期表示時に業務区分を設定
+initializeCategoryOptions();
 
 
 // ログイン状態を確認
