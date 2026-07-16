@@ -1,4 +1,10 @@
-import { db } from "./firebase.js";
+import {
+  db
+} from "./firebase.js";
+
+import {
+  CATEGORIES
+} from "./master-data.js";
 
 import {
   collection,
@@ -32,7 +38,6 @@ let reports = [];
 
 
 const levelElements = {
-
   "レベル1（軽微）":
     document.getElementById("level1Count"),
 
@@ -44,7 +49,6 @@ const levelElements = {
 
   "レベル4（事故寸前）":
     document.getElementById("level4Count")
-
 };
 
 
@@ -56,129 +60,161 @@ const departments = [
 ];
 
 
-const categories = [
-  "予防",
-  "査察",
-  "救急",
-  "救助",
-  "警防",
-  "消火",
-  "通信指令",
-  "指令",
-  "総務",
-  "その他"
-];
+/*
+ * 旧業務区分から新業務区分への変換表
+ */
+const CATEGORY_ALIASES = {
+  "査察": "予防",
+  "消火": "火災",
+  "指令": "通信指令"
+};
+
+
+/*
+ * 業務区分を現在のマスタに合わせる
+ */
+function normalizeCategory(value) {
+  const category =
+    String(value ?? "").trim();
+
+  if (!category) {
+    return "";
+  }
+
+  const convertedCategory =
+    CATEGORY_ALIASES[category] ||
+    category;
+
+  if (
+    CATEGORIES.includes(
+      convertedCategory
+    )
+  ) {
+    return convertedCategory;
+  }
+
+  return "その他";
+}
 
 
 function escapeHtml(value) {
-
   return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-
 }
 
 
 function countByField(
   reportData,
   fieldName,
-  options
+  options,
+  valueConverter = null
 ) {
-
   const result = {};
 
-
-  options.forEach((option) => {
-
-    result[option] = 0;
-
-  });
-
-
-  reportData.forEach((report) => {
-
-    const value = report[fieldName];
-
-
-    if (
-      value &&
-      Object.hasOwn(result, value)
-    ) {
-
-      result[value] += 1;
-
+  options.forEach(
+    option => {
+      result[option] = 0;
     }
+  );
 
-  });
+  reportData.forEach(
+    report => {
+      const originalValue =
+        report[fieldName];
 
+      const value =
+        typeof valueConverter ===
+          "function"
+          ? valueConverter(
+              originalValue
+            )
+          : originalValue;
+
+      if (
+        value &&
+        Object.hasOwn(
+          result,
+          value
+        )
+      ) {
+        result[value] += 1;
+      }
+    }
+  );
 
   return result;
-
 }
 
 
-function createStatisticsRows(countData) {
-
+function createStatisticsRows(
+  countData
+) {
   const values =
-    Object.values(countData);
+    Object.values(
+      countData
+    );
 
   const maximum =
-    Math.max(...values, 1);
+    Math.max(
+      ...values,
+      1
+    );
 
+  return Object.entries(
+    countData
+  )
+    .map(
+      ([label, count]) => {
+        const percentage =
+          count === 0
+            ? 0
+            : Math.max(
+                (
+                  count /
+                  maximum
+                ) * 100,
+                4
+              );
 
-  return Object.entries(countData)
+        return `
+          <div class="statistics-row">
 
-    .map(([label, count]) => {
+            <div class="statistics-label">
 
-      const percentage =
-        count === 0
-          ? 0
-          : Math.max(
-              (count / maximum) * 100,
-              4
-            );
+              <span>
+                ${escapeHtml(label)}
+              </span>
 
+              <span>
+                ${count}件
+              </span>
 
-      return `
-        <div class="statistics-row">
+            </div>
 
-          <div class="statistics-label">
+            <div class="bar-background">
 
-            <span>
-              ${escapeHtml(label)}
-            </span>
+              <div
+                class="bar"
+                style="width:${percentage}%"
+              ></div>
 
-            <span>
-              ${count}件
-            </span>
-
-          </div>
-
-          <div class="bar-background">
-
-            <div
-              class="bar"
-              style="width:${percentage}%"
-            >
             </div>
 
           </div>
-
-        </div>
-      `;
-
-    })
-
+        `;
+      }
+    )
     .join("");
-
 }
 
 
-function getCurrentMonthCount(reportData) {
-
+function getCurrentMonthCount(
+  reportData
+) {
   const today =
     new Date();
 
@@ -186,206 +222,192 @@ function getCurrentMonthCount(reportData) {
     today.getFullYear();
 
   const month =
-    String(today.getMonth() + 1)
-      .padStart(2, "0");
+    String(
+      today.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    );
 
   const currentMonth =
     `${year}-${month}`;
 
-
-  return reportData.filter((report) => {
-
-    return String(report.date || "")
-      .startsWith(currentMonth);
-
-  }).length;
-
+  return reportData.filter(
+    report => {
+      return String(
+        report.date || ""
+      ).startsWith(
+        currentMonth
+      );
+    }
+  ).length;
 }
 
 
-function updateLevelStatistics(reportData) {
-
+function updateLevelStatistics(
+  reportData
+) {
   const levelCounts = {
-
     "レベル1（軽微）": 0,
-
     "レベル2（注意）": 0,
-
     "レベル3（重大）": 0,
-
     "レベル4（事故寸前）": 0
-
   };
 
-
-  reportData.forEach((report) => {
-
-    if (
-      report.level &&
-      Object.hasOwn(levelCounts, report.level)
-    ) {
-
-      levelCounts[report.level] += 1;
-
+  reportData.forEach(
+    report => {
+      if (
+        report.level &&
+        Object.hasOwn(
+          levelCounts,
+          report.level
+        )
+      ) {
+        levelCounts[
+          report.level
+        ] += 1;
+      }
     }
+  );
 
-  });
-
-
-  Object.entries(levelCounts)
-    .forEach(([level, count]) => {
-
+  Object.entries(
+    levelCounts
+  ).forEach(
+    ([level, count]) => {
       const element =
         levelElements[level];
 
-
       if (element) {
-
         element.textContent =
           `${count}件`;
-
       }
-
-    });
-
+    }
+  );
 }
 
 
 // CSV用の文字列を安全にする
 function escapeCsv(value) {
-
   const text =
     String(value ?? "");
 
   const escaped =
-    text.replaceAll('"', '""');
+    text.replaceAll(
+      '"',
+      '""'
+    );
 
   return `"${escaped}"`;
-
 }
 
 
 // FirestoreのTimestampを文字列へ変換
 function formatCreatedAt(value) {
-
   if (!value) {
     return "";
   }
 
-
-  if (typeof value.toDate === "function") {
-
+  if (
+    typeof value.toDate ===
+    "function"
+  ) {
     const date =
       value.toDate();
 
     return date.toLocaleString(
       "ja-JP"
     );
-
   }
 
-
   return String(value);
-
 }
 
 
 // CSVファイルを作成
 function downloadCsv() {
-
-  if (reports.length === 0) {
-
+  if (
+    reports.length === 0
+  ) {
     alert(
       "出力できる事案がありません。"
     );
 
     return;
-
   }
 
-
   const headers = [
-
     "事案ID",
-
     "発生日",
-
     "所属",
-
     "業務区分",
-
     "発生場所",
-
     "ヒヤリハットレベル",
-
     "タイトル",
-
     "発生状況",
-
     "原因",
-
     "改善策",
-
     "学んだこと",
-
     "タグ",
-
     "登録日時"
-
   ];
-
 
   const rows =
-    reports.map((report) => [
+    reports.map(
+      report => [
+        report.id,
 
-      report.id,
+        report.date,
 
-      report.date,
+        report.department,
 
-      report.department,
+        normalizeCategory(
+          report.category
+        ),
 
-      report.category,
+        report.place,
 
-      report.place,
+        report.level,
 
-      report.level,
+        report.title,
 
-      report.title,
+        report.situation,
 
-      report.situation,
+        report.cause,
 
-      report.cause,
+        report.countermeasure,
 
-      report.countermeasure,
+        report.lesson,
 
-      report.lesson,
+        Array.isArray(
+          report.tags
+        )
+          ? report.tags.join("、")
+          : report.tags,
 
-      Array.isArray(report.tags)
-        ? report.tags.join("、")
-        : report.tags,
-
-      formatCreatedAt(
-        report.createdAt
-      )
-
-    ]);
-
+        formatCreatedAt(
+          report.createdAt
+        )
+      ]
+    );
 
   const csvLines = [
+    headers
+      .map(escapeCsv)
+      .join(","),
 
-    headers.map(escapeCsv).join(","),
-
-    ...rows.map((row) =>
-      row.map(escapeCsv).join(",")
+    ...rows.map(
+      row =>
+        row
+          .map(escapeCsv)
+          .join(",")
     )
-
   ];
-
 
   const csvContent =
     "\uFEFF" +
-    csvLines.join("\r\n");
-
+    csvLines.join(
+      "\r\n"
+    );
 
   const blob =
     new Blob(
@@ -396,36 +418,39 @@ function downloadCsv() {
       }
     );
 
-
   const today =
     new Date();
 
-  const fileDate =
-    [
-      today.getFullYear(),
+  const fileDate = [
+    today.getFullYear(),
 
-      String(
-        today.getMonth() + 1
-      ).padStart(2, "0"),
+    String(
+      today.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    ),
 
-      String(
-        today.getDate()
-      ).padStart(2, "0")
-
-    ].join("");
-
+    String(
+      today.getDate()
+    ).padStart(
+      2,
+      "0"
+    )
+  ].join("");
 
   const fileName =
     `FireNear_${fileDate}.csv`;
 
-
   const url =
-    URL.createObjectURL(blob);
-
+    URL.createObjectURL(
+      blob
+    );
 
   const link =
-    document.createElement("a");
-
+    document.createElement(
+      "a"
+    );
 
   link.href =
     url;
@@ -433,50 +458,52 @@ function downloadCsv() {
   link.download =
     fileName;
 
-
-  document.body.appendChild(link);
+  document.body.appendChild(
+    link
+  );
 
   link.click();
 
   link.remove();
 
-
-  URL.revokeObjectURL(url);
-
+  URL.revokeObjectURL(
+    url
+  );
 }
 
 
 // 統計データの読み込み
 async function loadStatistics() {
-
   try {
-
     const snapshot =
       await getDocs(
-        collection(db, "reports")
+        collection(
+          db,
+          "reports"
+        )
       );
 
-
     reports =
-      snapshot.docs.map((document) => ({
+      snapshot.docs.map(
+        document => ({
+          id:
+            document.id,
 
-        id: document.id,
-
-        ...document.data()
-
-      }));
-
+          ...document.data()
+        })
+      );
 
     totalCount.textContent =
       reports.length;
 
-
     monthlyCount.textContent =
-      getCurrentMonthCount(reports);
+      getCurrentMonthCount(
+        reports
+      );
 
-
-    updateLevelStatistics(reports);
-
+    updateLevelStatistics(
+      reports
+    );
 
     const departmentCounts =
       countByField(
@@ -485,30 +512,26 @@ async function loadStatistics() {
         departments
       );
 
-
     const categoryCounts =
       countByField(
         reports,
         "category",
-        categories
+        CATEGORIES,
+        normalizeCategory
       );
-
 
     departmentStatistics.innerHTML =
       createStatisticsRows(
         departmentCounts
       );
 
-
     categoryStatistics.innerHTML =
       createStatisticsRows(
         categoryCounts
       );
 
-
     csvDownloadButton.disabled =
       reports.length === 0;
-
 
     loadingMessage.hidden =
       true;
@@ -516,26 +539,20 @@ async function loadStatistics() {
     statisticsContent.hidden =
       false;
 
-
   } catch (error) {
-
     console.error(
       "統計読み込みエラー:",
       error
     );
 
-
     loadingMessage.className =
       "error-message";
-
 
     loadingMessage.innerHTML = `
       統計情報の読み込みに失敗しました。<br>
       ページを再読み込みしてください。
     `;
-
   }
-
 }
 
 
