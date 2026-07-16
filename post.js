@@ -3,6 +3,10 @@ import {
 } from "./firebase.js";
 
 import {
+  setCategoryOptions
+} from "./master-data.js";
+
+import {
   collection,
   addDoc,
   serverTimestamp
@@ -104,6 +108,23 @@ const confirmTags =
 
 let pendingReportData =
   null;
+
+
+/*
+ * 業務区分をmaster-data.jsから設定
+ */
+function initializeCategoryOptions() {
+  setCategoryOptions(
+    categoryInput,
+    {
+      firstOptionText:
+        "選択してください",
+
+      preserveUnknownValue:
+        false
+    }
+  );
+}
 
 
 function showStatus(
@@ -420,6 +441,8 @@ async function submitReport() {
 
     form.reset();
 
+    initializeCategoryOptions();
+
     dateInput.value =
       getTodayString();
 
@@ -467,6 +490,8 @@ async function submitReport() {
 
 function startNewPost() {
   form.reset();
+
+  initializeCategoryOptions();
 
   dateInput.value =
     getTodayString();
@@ -521,6 +546,11 @@ newPostButton.addEventListener(
   startNewPost
 );
 
+
+/*
+ * 初期表示
+ */
+initializeCategoryOptions();
 
 dateInput.value =
   getTodayString();
