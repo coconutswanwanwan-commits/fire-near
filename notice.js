@@ -54,7 +54,9 @@ const noticeList =
 
 
 let editingNoticeId = null;
+
 let allNotices = [];
+
 let unsubscribeNotices = null;
 
 
@@ -103,12 +105,18 @@ function getTodayString() {
   const month =
     String(
       today.getMonth() + 1
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
   const day =
     String(
       today.getDate()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
   return `${year}-${month}-${day}`;
 }
@@ -120,20 +128,26 @@ function formatDate(value) {
   }
 
   if (
-    typeof value === "string"
+    typeof value ===
+    "string"
   ) {
     const parts =
       value.split("-");
 
     if (parts.length === 3) {
-      return `${parts[0]}年${parts[1]}月${parts[2]}日`;
+      return (
+        `${parts[0]}年` +
+        `${parts[1]}月` +
+        `${parts[2]}日`
+      );
     }
   }
 
   let date;
 
   if (
-    typeof value.toDate === "function"
+    typeof value.toDate ===
+    "function"
   ) {
     date =
       value.toDate();
@@ -295,6 +309,7 @@ function createNoticeElement(notice) {
 
     </div>
 
+
     <div class="notice-meta">
 
       <span class="meta-chip">
@@ -315,6 +330,7 @@ function createNoticeElement(notice) {
 
     </div>
 
+
     <p class="notice-content">
       ${escapeHtml(
         notice.content ||
@@ -323,6 +339,7 @@ function createNoticeElement(notice) {
         ""
       )}
     </p>
+
 
     <div class="notice-actions">
 
@@ -334,6 +351,7 @@ function createNoticeElement(notice) {
       >
         編集
       </button>
+
 
       <button
         type="button"
@@ -349,6 +367,7 @@ function createNoticeElement(notice) {
         }
       </button>
 
+
       <button
         type="button"
         class="notice-action-button order-button"
@@ -357,6 +376,7 @@ function createNoticeElement(notice) {
       >
         最上部へ
       </button>
+
 
       <button
         type="button"
@@ -388,9 +408,13 @@ function sortNotices(notices) {
         Number(second.order) || 0;
 
       if (
-        firstOrder !== secondOrder
+        firstOrder !==
+        secondOrder
       ) {
-        return firstOrder - secondOrder;
+        return (
+          firstOrder -
+          secondOrder
+        );
       }
 
       const firstDate =
@@ -407,8 +431,32 @@ function sortNotices(notices) {
           ""
         );
 
-      return secondDate.localeCompare(
-        firstDate
+      if (
+        firstDate !==
+        secondDate
+      ) {
+        return secondDate.localeCompare(
+          firstDate
+        );
+      }
+
+      const firstCreatedAt =
+        first.createdAt &&
+        typeof first.createdAt.toMillis ===
+          "function"
+          ? first.createdAt.toMillis()
+          : 0;
+
+      const secondCreatedAt =
+        second.createdAt &&
+        typeof second.createdAt.toMillis ===
+          "function"
+          ? second.createdAt.toMillis()
+          : 0;
+
+      return (
+        secondCreatedAt -
+        firstCreatedAt
       );
     }
   );
@@ -419,7 +467,9 @@ function renderNotices() {
   noticeList.innerHTML =
     "";
 
-  if (allNotices.length === 0) {
+  if (
+    allNotices.length === 0
+  ) {
     noticeList.innerHTML = `
       <div class="empty-message">
         登録されているお知らせはありません。
@@ -454,6 +504,7 @@ async function saveNotice(event) {
     );
 
     titleInput.focus();
+
     return;
   }
 
@@ -463,6 +514,7 @@ async function saveNotice(event) {
     );
 
     contentInput.focus();
+
     return;
   }
 
@@ -544,7 +596,8 @@ async function saveNotice(event) {
 
     showStatus(
       `お知らせの保存に失敗しました。
-エラーコード：${error.code || "不明"}`,
+エラーコード：${error.code || "不明"}
+詳細：${error.message || "不明"}`,
       "error-message"
     );
 
@@ -678,7 +731,8 @@ async function removeNotice(
     );
 
     if (
-      editingNoticeId === noticeId
+      editingNoticeId ===
+      noticeId
     ) {
       resetForm();
     }
@@ -704,12 +758,17 @@ function startRealtimeNotices() {
     unsubscribeNotices();
   }
 
+  showStatus(
+    "お知らせを読み込んでいます..."
+  );
+
   unsubscribeNotices =
     onSnapshot(
       collection(
         db,
         "notices"
       ),
+
       snapshot => {
         const notices =
           snapshot.docs.map(
@@ -725,8 +784,10 @@ function startRealtimeNotices() {
           sortNotices(notices);
 
         renderNotices();
+
         hideStatus();
       },
+
       error => {
         console.error(
           "お知らせ取得エラー:",
@@ -735,7 +796,8 @@ function startRealtimeNotices() {
 
         showStatus(
           `お知らせ一覧の取得に失敗しました。
-エラーコード：${error.code || "不明"}`,
+エラーコード：${error.code || "不明"}
+詳細：${error.message || "不明"}`,
           "error-message"
         );
       }
@@ -775,6 +837,7 @@ noticeList.addEventListener(
 
     if (action === "edit") {
       startEdit(noticeId);
+
       return;
     }
 
@@ -826,6 +889,7 @@ onAuthStateChanged(
       }
 
       resetForm();
+
       startRealtimeNotices();
 
     } catch (error) {
@@ -835,7 +899,8 @@ onAuthStateChanged(
       );
 
       showStatus(
-        "管理者権限を確認できませんでした。",
+        `管理者権限を確認できませんでした。
+エラーコード：${error.code || "不明"}`,
         "error-message"
       );
     }
