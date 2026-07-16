@@ -4,10 +4,13 @@ import {
 } from "./firebase.js";
 
 import {
+  collection,
+  addDoc,
   doc,
   getDoc,
-  setDoc,
+  updateDoc,
   deleteDoc,
+  onSnapshot,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
@@ -50,16 +53,9 @@ const noticeList =
   document.getElementById("noticeList");
 
 
-const noticeReference =
-  doc(
-    db,
-    "settings",
-    "notice"
-  );
-
-
-let currentNoticeExists =
-  false;
+let editingNoticeId = null;
+let allNotices = [];
+let unsubscribeNotices = null;
 
 
 function showStatus(
@@ -88,9 +84,7 @@ function hideStatus() {
 
 
 function escapeHtml(value) {
-  return String(
-    value ?? ""
-  )
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -109,33 +103,37 @@ function getTodayString() {
   const month =
     String(
       today.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    );
+    ).padStart(2, "0");
 
   const day =
     String(
       today.getDate()
-    ).padStart(
-      2,
-      "0"
-    );
+    ).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
 
 
-function formatDateTime(value) {
+function formatDate(value) {
   if (!value) {
-    return "未記録";
+    return "日付未設定";
+  }
+
+  if (
+    typeof value === "string"
+  ) {
+    const parts =
+      value.split("-");
+
+    if (parts.length === 3) {
+      return `${parts[0]}年${parts[1]}月${parts[2]}日`;
+    }
   }
 
   let date;
 
   if (
-    typeof value.toDate ===
-    "function"
+    typeof value.toDate === "function"
   ) {
     date =
       value.toDate();
@@ -150,18 +148,11 @@ function formatDateTime(value) {
       date.getTime()
     )
   ) {
-    return "未記録";
+    return "日付未設定";
   }
 
-  return date.toLocaleString(
-    "ja-JP",
-    {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    }
+  return date.toLocaleDateString(
+    "ja-JP"
   );
 }
 
@@ -185,11 +176,10 @@ async function checkAdmin(user) {
 
 
 function resetForm() {
-  titleInput.value =
-    "";
+  editingNoticeId =
+    null;
 
-  contentInput.value =
-    "";
+  noticeForm.reset();
 
   dateInput.value =
     getTodayString();
@@ -211,37 +201,59 @@ function resetForm() {
 }
 
 
-function renderNotice(data) {
-  noticeList.innerHTML =
-    "";
+function startEdit(noticeId) {
+  const notice =
+    allNotices.find(
+      item =>
+        item.id === noticeId
+    );
 
-  if (!data) {
-    noticeList.innerHTML = `
-      <div class="empty-message">
-        現在、登録されているお知らせはありません。
-      </div>
-    `;
-
+  if (!notice) {
     return;
   }
 
-  const title =
-    data.title ||
-    "お知らせ";
+  editingNoticeId =
+    noticeId;
 
-  const body =
-    data.body ||
-    data.content ||
+  titleInput.value =
+    notice.title || "";
+
+  dateInput.value =
+    notice.displayDate ||
+    notice.date ||
+    getTodayString();
+
+  orderInput.value =
+    Number(notice.order) || 0;
+
+  contentInput.value =
+    notice.content ||
+    notice.body ||
+    notice.message ||
     "";
 
-  const published =
-    data.published !== false;
+  publishedInput.checked =
+    notice.published !== false;
 
-  const updatedDate =
-    formatDateTime(
-      data.updatedAt
-    );
+  formTitle.textContent =
+    "✏️ お知らせを編集";
 
+  saveButton.textContent =
+    "変更を保存";
+
+  cancelButton.hidden =
+    false;
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  titleInput.focus();
+}
+
+
+function createNoticeElement(notice) {
   const article =
     document.createElement(
       "article"
@@ -249,6 +261,9 @@ function renderNotice(data) {
 
   article.className =
     "notice-item";
+
+  const published =
+    notice.published !== false;
 
   if (!published) {
     article.classList.add(
@@ -260,7 +275,10 @@ function renderNotice(data) {
     <div class="notice-item-header">
 
       <h3 class="notice-item-title">
-        ${escapeHtml(title)}
+        ${escapeHtml(
+          notice.title ||
+          "無題のお知らせ"
+        )}
       </h3>
 
       <span class="notice-status ${
@@ -277,30 +295,34 @@ function renderNotice(data) {
 
     </div>
 
-
     <div class="notice-meta">
 
       <span class="meta-chip">
-        📅 ${
-          escapeHtml(
-            data.displayDate ||
-            "日付未設定"
+        📅 ${escapeHtml(
+          formatDate(
+            notice.displayDate ||
+            notice.date
           )
-        }
+        )}
       </span>
 
       <span class="meta-chip">
-        最終更新：
-        ${escapeHtml(updatedDate)}
+        表示順：
+        ${escapeHtml(
+          notice.order ?? 0
+        )}
       </span>
 
     </div>
 
-
     <p class="notice-content">
-      ${escapeHtml(body)}
+      ${escapeHtml(
+        notice.content ||
+        notice.body ||
+        notice.message ||
+        ""
+      )}
     </p>
-
 
     <div class="notice-actions">
 
@@ -308,15 +330,16 @@ function renderNotice(data) {
         type="button"
         class="notice-action-button edit-button"
         data-action="edit"
+        data-id="${escapeHtml(notice.id)}"
       >
         編集
       </button>
-
 
       <button
         type="button"
         class="notice-action-button publish-button"
         data-action="publish"
+        data-id="${escapeHtml(notice.id)}"
         data-published="${published}"
       >
         ${
@@ -326,11 +349,24 @@ function renderNotice(data) {
         }
       </button>
 
+      <button
+        type="button"
+        class="notice-action-button order-button"
+        data-action="top"
+        data-id="${escapeHtml(notice.id)}"
+      >
+        最上部へ
+      </button>
 
       <button
         type="button"
         class="notice-action-button delete-button"
         data-action="delete"
+        data-id="${escapeHtml(notice.id)}"
+        data-title="${escapeHtml(
+          notice.title ||
+          "無題のお知らせ"
+        )}"
       >
         削除
       </button>
@@ -338,83 +374,68 @@ function renderNotice(data) {
     </div>
   `;
 
-  noticeList.appendChild(
-    article
+  return article;
+}
+
+
+function sortNotices(notices) {
+  return [...notices].sort(
+    (first, second) => {
+      const firstOrder =
+        Number(first.order) || 0;
+
+      const secondOrder =
+        Number(second.order) || 0;
+
+      if (
+        firstOrder !== secondOrder
+      ) {
+        return firstOrder - secondOrder;
+      }
+
+      const firstDate =
+        String(
+          first.displayDate ||
+          first.date ||
+          ""
+        );
+
+      const secondDate =
+        String(
+          second.displayDate ||
+          second.date ||
+          ""
+        );
+
+      return secondDate.localeCompare(
+        firstDate
+      );
+    }
   );
 }
 
 
-async function loadNotice() {
-  showStatus(
-    "お知らせを読み込んでいます..."
-  );
+function renderNotices() {
+  noticeList.innerHTML =
+    "";
 
-  try {
-    const snapshot =
-      await getDoc(
-        noticeReference
-      );
+  if (allNotices.length === 0) {
+    noticeList.innerHTML = `
+      <div class="empty-message">
+        登録されているお知らせはありません。
+      </div>
+    `;
 
-    if (!snapshot.exists()) {
-      currentNoticeExists =
-        false;
-
-      resetForm();
-      renderNotice(null);
-      hideStatus();
-
-      return;
-    }
-
-    currentNoticeExists =
-      true;
-
-    const data =
-      snapshot.data();
-
-    titleInput.value =
-      data.title ||
-      "";
-
-    contentInput.value =
-      data.body ||
-      data.content ||
-      "";
-
-    dateInput.value =
-      data.displayDate ||
-      getTodayString();
-
-    orderInput.value =
-      Number(data.order) || 0;
-
-    publishedInput.checked =
-      data.published !== false;
-
-    formTitle.textContent =
-      "✏️ お知らせを編集";
-
-    saveButton.textContent =
-      "変更を保存";
-
-    cancelButton.hidden =
-      true;
-
-    renderNotice(data);
-    hideStatus();
-
-  } catch (error) {
-    console.error(
-      "お知らせ取得エラー:",
-      error
-    );
-
-    showStatus(
-      `お知らせの取得に失敗しました。
-エラーコード：${error.code || "不明"}`,
-      "error-message"
-    );
+    return;
   }
+
+  allNotices.forEach(
+    notice => {
+      noticeList.appendChild(
+        createNoticeElement(notice)
+      );
+    }
+  );
 }
 
 
@@ -424,7 +445,7 @@ async function saveNotice(event) {
   const title =
     titleInput.value.trim();
 
-  const body =
+  const content =
     contentInput.value.trim();
 
   if (!title) {
@@ -436,7 +457,7 @@ async function saveNotice(event) {
     return;
   }
 
-  if (!body) {
+  if (!content) {
     alert(
       "内容を入力してください。"
     );
@@ -448,49 +469,72 @@ async function saveNotice(event) {
   saveButton.disabled =
     true;
 
+  cancelButton.disabled =
+    true;
+
   showStatus(
-    "お知らせを保存しています..."
+    editingNoticeId
+      ? "変更を保存しています..."
+      : "お知らせを登録しています..."
   );
 
+  const noticeData = {
+    title,
+    content,
+
+    displayDate:
+      dateInput.value ||
+      getTodayString(),
+
+    order:
+      Number(
+        orderInput.value
+      ) || 0,
+
+    published:
+      publishedInput.checked,
+
+    updatedAt:
+      serverTimestamp()
+  };
+
   try {
-    await setDoc(
-      noticeReference,
-      {
-        title,
-        body,
+    if (editingNoticeId) {
+      await updateDoc(
+        doc(
+          db,
+          "notices",
+          editingNoticeId
+        ),
+        noticeData
+      );
 
-        content:
-          body,
+      showStatus(
+        "お知らせを更新しました。",
+        "success-message"
+      );
 
-        displayDate:
-          dateInput.value ||
-          getTodayString(),
+    } else {
+      await addDoc(
+        collection(
+          db,
+          "notices"
+        ),
+        {
+          ...noticeData,
 
-        order:
-          Number(
-            orderInput.value
-          ) || 0,
+          createdAt:
+            serverTimestamp()
+        }
+      );
 
-        published:
-          publishedInput.checked,
+      showStatus(
+        "お知らせを登録しました。",
+        "success-message"
+      );
+    }
 
-        updatedAt:
-          serverTimestamp()
-      },
-      {
-        merge: true
-      }
-    );
-
-    currentNoticeExists =
-      true;
-
-    showStatus(
-      "お知らせを保存しました。ホーム画面を再読み込みすると反映されます。",
-      "success-message"
-    );
-
-    await loadNotice();
+    resetForm();
 
   } catch (error) {
     console.error(
@@ -507,11 +551,15 @@ async function saveNotice(event) {
   } finally {
     saveButton.disabled =
       false;
+
+    cancelButton.disabled =
+      false;
   }
 }
 
 
 async function togglePublished(
+  noticeId,
   currentPublished,
   button
 ) {
@@ -519,21 +567,20 @@ async function togglePublished(
     true;
 
   try {
-    await setDoc(
-      noticeReference,
+    await updateDoc(
+      doc(
+        db,
+        "notices",
+        noticeId
+      ),
       {
         published:
           !currentPublished,
 
         updatedAt:
           serverTimestamp()
-      },
-      {
-        merge: true
       }
     );
-
-    await loadNotice();
 
   } catch (error) {
     console.error(
@@ -551,12 +598,67 @@ async function togglePublished(
 }
 
 
+async function moveToTop(
+  noticeId,
+  button
+) {
+  button.disabled =
+    true;
+
+  const smallestOrder =
+    allNotices.reduce(
+      (minimum, notice) => {
+        const order =
+          Number(notice.order) || 0;
+
+        return Math.min(
+          minimum,
+          order
+        );
+      },
+      0
+    );
+
+  try {
+    await updateDoc(
+      doc(
+        db,
+        "notices",
+        noticeId
+      ),
+      {
+        order:
+          smallestOrder - 1,
+
+        updatedAt:
+          serverTimestamp()
+      }
+    );
+
+  } catch (error) {
+    console.error(
+      "表示順更新エラー:",
+      error
+    );
+
+    alert(
+      "表示順の変更に失敗しました。"
+    );
+
+    button.disabled =
+      false;
+  }
+}
+
+
 async function removeNotice(
+  noticeId,
+  title,
   button
 ) {
   const confirmed =
     confirm(
-      "現在のお知らせを削除します。\nこの操作は取り消せません。"
+      `「${title}」を削除します。\nこの操作は取り消せません。`
     );
 
   if (!confirmed) {
@@ -568,19 +670,18 @@ async function removeNotice(
 
   try {
     await deleteDoc(
-      noticeReference
+      doc(
+        db,
+        "notices",
+        noticeId
+      )
     );
 
-    currentNoticeExists =
-      false;
-
-    resetForm();
-    renderNotice(null);
-
-    showStatus(
-      "お知らせを削除しました。",
-      "success-message"
-    );
+    if (
+      editingNoticeId === noticeId
+    ) {
+      resetForm();
+    }
 
   } catch (error) {
     console.error(
@@ -598,6 +699,50 @@ async function removeNotice(
 }
 
 
+function startRealtimeNotices() {
+  if (unsubscribeNotices) {
+    unsubscribeNotices();
+  }
+
+  unsubscribeNotices =
+    onSnapshot(
+      collection(
+        db,
+        "notices"
+      ),
+      snapshot => {
+        const notices =
+          snapshot.docs.map(
+            noticeDocument => ({
+              id:
+                noticeDocument.id,
+
+              ...noticeDocument.data()
+            })
+          );
+
+        allNotices =
+          sortNotices(notices);
+
+        renderNotices();
+        hideStatus();
+      },
+      error => {
+        console.error(
+          "お知らせ取得エラー:",
+          error
+        );
+
+        showStatus(
+          `お知らせ一覧の取得に失敗しました。
+エラーコード：${error.code || "不明"}`,
+          "error-message"
+        );
+      }
+    );
+}
+
+
 noticeForm.addEventListener(
   "submit",
   saveNotice
@@ -606,14 +751,7 @@ noticeForm.addEventListener(
 
 cancelButton.addEventListener(
   "click",
-  async () => {
-    if (currentNoticeExists) {
-      await loadNotice();
-
-    } else {
-      resetForm();
-    }
-  }
+  resetForm
 );
 
 
@@ -629,21 +767,20 @@ noticeList.addEventListener(
       return;
     }
 
+    const noticeId =
+      button.dataset.id;
+
     const action =
       button.dataset.action;
 
     if (action === "edit") {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-
-      titleInput.focus();
+      startEdit(noticeId);
       return;
     }
 
     if (action === "publish") {
       await togglePublished(
+        noticeId,
         button.dataset.published ===
           "true",
         button
@@ -652,8 +789,20 @@ noticeList.addEventListener(
       return;
     }
 
+    if (action === "top") {
+      await moveToTop(
+        noticeId,
+        button
+      );
+
+      return;
+    }
+
     if (action === "delete") {
       await removeNotice(
+        noticeId,
+        button.dataset.title ||
+          "無題のお知らせ",
         button
       );
     }
@@ -676,10 +825,8 @@ onAuthStateChanged(
         return;
       }
 
-      dateInput.value =
-        getTodayString();
-
-      await loadNotice();
+      resetForm();
+      startRealtimeNotices();
 
     } catch (error) {
       console.error(
@@ -691,6 +838,16 @@ onAuthStateChanged(
         "管理者権限を確認できませんでした。",
         "error-message"
       );
+    }
+  }
+);
+
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+    if (unsubscribeNotices) {
+      unsubscribeNotices();
     }
   }
 );
