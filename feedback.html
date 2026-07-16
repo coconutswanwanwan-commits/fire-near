@@ -15,11 +15,13 @@
 
     <link
         rel="stylesheet"
-        href="style.css"
+        href="style.css?v=160"
     >
 
     <style>
-        .feedback-card {
+        .feedback-card,
+        .confirmation-card,
+        .completion-card {
             padding: 22px;
             margin-bottom: 22px;
             border-radius: 15px;
@@ -27,11 +29,13 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
 
-        .feedback-title {
+        .feedback-title,
+        .confirmation-title {
             margin-bottom: 12px;
         }
 
-        .feedback-description {
+        .feedback-description,
+        .confirmation-description {
             margin-bottom: 20px;
             color: #555;
             line-height: 1.8;
@@ -102,6 +106,7 @@
             border-radius: 12px;
             background: #f4f7fb;
             line-height: 1.7;
+            white-space: pre-wrap;
         }
 
         .success-message {
@@ -114,12 +119,68 @@
             font-weight: bold;
         }
 
+        .confirmation-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .confirmation-item {
+            padding: 15px;
+            border-radius: 11px;
+            background: #f4f7fb;
+        }
+
+        .confirmation-label {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .confirmation-value {
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .confirmation-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .confirmation-button {
+            width: 100%;
+            padding: 15px 10px;
+            border-radius: 11px;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .edit-button {
+            background: #616161;
+        }
+
+        .final-submit-button {
+            background: #2e7d32;
+        }
+
+        .confirmation-note {
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 11px;
+            background: #fff8e1;
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
         .completion-card {
             padding: 28px 20px;
-            border-radius: 15px;
-            background: white;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
 
         .completion-icon {
@@ -137,16 +198,29 @@
             line-height: 1.8;
         }
 
-        .completion-button {
-            display: inline-block;
+        .completion-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .completion-button,
+        .new-feedback-button {
+            display: block;
             width: 100%;
-            max-width: 360px;
             padding: 14px;
             border-radius: 11px;
-            background: #1565c0;
             color: white;
             text-decoration: none;
             font-weight: bold;
+        }
+
+        .completion-button {
+            background: #1565c0;
+        }
+
+        .new-feedback-button {
+            background: #616161;
         }
 
         .back-links {
@@ -158,7 +232,9 @@
         }
 
         @media (max-width: 600px) {
-            .form-grid {
+            .form-grid,
+            .confirmation-actions,
+            .completion-actions {
                 grid-template-columns: 1fr;
             }
 
@@ -216,6 +292,7 @@
 
                     <label for="typeInput">
                         種類
+
                         <span class="required-mark">
                             必須
                         </span>
@@ -253,6 +330,7 @@
 
                     <label for="pageInput">
                         発生した画面
+
                         <span class="required-mark">
                             必須
                         </span>
@@ -294,6 +372,10 @@
                             統計・レポート
                         </option>
 
+                        <option value="不具合・改善要望フォーム">
+                            不具合・改善要望フォーム
+                        </option>
+
                         <option value="その他">
                             その他
                         </option>
@@ -306,6 +388,7 @@
 
                     <label for="titleInput">
                         件名
+
                         <span class="required-mark">
                             必須
                         </span>
@@ -326,6 +409,7 @@
 
                     <label for="contentInput">
                         詳しい内容
+
                         <span class="required-mark">
                             必須
                         </span>
@@ -353,6 +437,7 @@
 
                     <label for="nameInput">
                         お名前
+
                         <span class="optional-mark">
                             任意
                         </span>
@@ -372,6 +457,7 @@
 
                     <label for="emailInput">
                         返信先メールアドレス
+
                         <span class="optional-mark">
                             任意
                         </span>
@@ -403,12 +489,144 @@
                 id="submitButton"
                 class="submit-button"
             >
-                内容を送信する
+                🔍 入力内容を確認する
             </button>
 
         </form>
 
     </main>
+
+
+    <section
+        id="confirmationArea"
+        class="confirmation-card"
+        hidden
+    >
+
+        <h2 class="confirmation-title">
+            🔍 送信内容の最終確認
+        </h2>
+
+        <p class="confirmation-description">
+            以下の内容をシステム管理者へ送信します。
+            内容に間違いがないか確認してください。
+        </p>
+
+
+        <div class="confirmation-list">
+
+            <div class="confirmation-item">
+
+                <span class="confirmation-label">
+                    種類
+                </span>
+
+                <div
+                    id="confirmType"
+                    class="confirmation-value"
+                ></div>
+
+            </div>
+
+
+            <div class="confirmation-item">
+
+                <span class="confirmation-label">
+                    発生した画面
+                </span>
+
+                <div
+                    id="confirmPage"
+                    class="confirmation-value"
+                ></div>
+
+            </div>
+
+
+            <div class="confirmation-item">
+
+                <span class="confirmation-label">
+                    件名
+                </span>
+
+                <div
+                    id="confirmTitle"
+                    class="confirmation-value"
+                ></div>
+
+            </div>
+
+
+            <div class="confirmation-item">
+
+                <span class="confirmation-label">
+                    詳しい内容
+                </span>
+
+                <div
+                    id="confirmContent"
+                    class="confirmation-value"
+                ></div>
+
+            </div>
+
+
+            <div class="confirmation-item">
+
+                <span class="confirmation-label">
+                    お名前
+                </span>
+
+                <div
+                    id="confirmName"
+                    class="confirmation-value"
+                ></div>
+
+            </div>
+
+
+            <div class="confirmation-item">
+
+                <span class="confirmation-label">
+                    返信先メールアドレス
+                </span>
+
+                <div
+                    id="confirmEmail"
+                    class="confirmation-value"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <div class="confirmation-note">
+            使用端末やブラウザなどの技術情報も、不具合確認のため自動的に送信されます。
+        </div>
+
+
+        <div class="confirmation-actions">
+
+            <button
+                type="button"
+                id="editButton"
+                class="confirmation-button edit-button"
+            >
+                ← 内容を修正する
+            </button>
+
+            <button
+                type="button"
+                id="finalSubmitButton"
+                class="confirmation-button final-submit-button"
+            >
+                ✅ この内容で送信する
+            </button>
+
+        </div>
+
+    </section>
 
 
     <section
@@ -430,12 +648,25 @@
             送信された内容を確認し、必要に応じて対応します。
         </p>
 
-        <a
-            href="index.html"
-            class="completion-button"
-        >
-            ホームへ戻る
-        </a>
+
+        <div class="completion-actions">
+
+            <a
+                href="index.html"
+                class="completion-button"
+            >
+                🏠 ホームへ戻る
+            </a>
+
+            <button
+                type="button"
+                id="newFeedbackButton"
+                class="new-feedback-button"
+            >
+                🐞 続けて送信する
+            </button>
+
+        </div>
 
     </section>
 
@@ -458,7 +689,7 @@
 
 <script
     type="module"
-    src="feedback.js?v=100"
+    src="feedback.js?v=160"
 ></script>
 
 </body>
