@@ -15,7 +15,7 @@
 
     <link
         rel="stylesheet"
-        href="style.css"
+        href="style.css?v=141"
     >
 
     <style>
@@ -139,6 +139,12 @@
             text-align: center;
             font-weight: bold;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .admin-menu-button:hover {
+            transform: translateY(-2px);
+            opacity: 0.94;
         }
 
         .admin-menu-icon {
@@ -177,8 +183,13 @@
 
         .feedback-management {
             background: #ad1457;
-　　　　　 }
-        
+        }
+
+        .home-link-area {
+            margin-top: 20px;
+            text-align: center;
+        }
+
         @media (max-width: 600px) {
             .summary-grid,
             .admin-menu {
@@ -193,6 +204,7 @@
 <div class="container">
 
     <header>
+
         <h1>
             👨‍💼 管理ダッシュボード
         </h1>
@@ -200,6 +212,7 @@
         <p class="subTitle">
             Fire Near 管理者専用ページ
         </p>
+
     </header>
 
 
@@ -207,6 +220,7 @@
         class="admin-card"
         id="loginSection"
     >
+
         <p class="admin-description">
             管理者用Googleアカウントでログインしてください。
             一般職員はログインする必要はありません。
@@ -226,6 +240,7 @@
         >
             ログイン状態を確認しています...
         </div>
+
     </section>
 
 
@@ -244,17 +259,26 @@
             <div class="user-information">
 
                 <p>
-                    <strong>管理者名：</strong>
+                    <strong>
+                        管理者名：
+                    </strong>
+
                     <span id="userName"></span>
                 </p>
 
                 <p>
-                    <strong>メールアドレス：</strong>
+                    <strong>
+                        メールアドレス：
+                    </strong>
+
                     <span id="userEmail"></span>
                 </p>
 
                 <p>
-                    <strong>権限：</strong>
+                    <strong>
+                        権限：
+                    </strong>
+
                     管理者
                 </p>
 
@@ -311,6 +335,7 @@
                     href="cases.html"
                     class="admin-menu-button post-management"
                 >
+
                     <span class="admin-menu-icon">
                         📝
                     </span>
@@ -320,6 +345,7 @@
                     <span class="admin-menu-description">
                         投稿の確認・編集・削除
                     </span>
+
                 </a>
 
 
@@ -327,6 +353,7 @@
                     href="cases.html"
                     class="admin-menu-button featured-management"
                 >
+
                     <span class="admin-menu-icon">
                         📌
                     </span>
@@ -336,6 +363,7 @@
                     <span class="admin-menu-description">
                         詳細画面から設定・解除
                     </span>
+
                 </a>
 
 
@@ -343,6 +371,7 @@
                     href="notice.html"
                     class="admin-menu-button notice-management"
                 >
+
                     <span class="admin-menu-icon">
                         📢
                     </span>
@@ -352,6 +381,7 @@
                     <span class="admin-menu-description">
                         トップページのお知らせを編集
                     </span>
+
                 </a>
 
 
@@ -359,6 +389,7 @@
                     href="stats.html"
                     class="admin-menu-button statistics-management"
                 >
+
                     <span class="admin-menu-icon">
                         📊
                     </span>
@@ -368,6 +399,7 @@
                     <span class="admin-menu-description">
                         集計確認・CSV出力
                     </span>
+
                 </a>
 
 
@@ -375,6 +407,7 @@
                     href="report.html"
                     class="admin-menu-button report-management"
                 >
+
                     <span class="admin-menu-icon">
                         📄
                     </span>
@@ -384,22 +417,27 @@
                     <span class="admin-menu-description">
                         PDF作成・印刷
                     </span>
+
                 </a>
-<a
-    href="feedback-admin.html"
-    class="admin-menu-button feedback-management"
->
-    <span class="admin-menu-icon">
-        🐞
-    </span>
 
-    お問い合わせ管理
 
-    <span class="admin-menu-description">
-        不具合・改善要望を確認
-    </span>
-</a>
-                
+                <a
+                    href="feedback-admin.html"
+                    class="admin-menu-button feedback-management"
+                >
+
+                    <span class="admin-menu-icon">
+                        🐞
+                    </span>
+
+                    お問い合わせ管理
+
+                    <span class="admin-menu-description">
+                        不具合・改善要望を確認
+                    </span>
+
+                </a>
+
             </div>
 
 
@@ -416,7 +454,7 @@
     </main>
 
 
-    <div style="text-align:center; margin-top:20px;">
+    <div class="home-link-area">
 
         <a href="index.html">
             🏠 ホームへ戻る
@@ -434,7 +472,7 @@
 
 <script
     type="module"
-    src="admin.js?v=130"
+    src="admin.js?v=141"
 ></script>
 
 </body>
