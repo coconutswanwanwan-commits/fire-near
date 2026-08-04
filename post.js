@@ -547,6 +547,7 @@ newPostButton.addEventListener(
 );
 
 
+
 /*
  * 初期表示
  */
