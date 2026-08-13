@@ -47,6 +47,8 @@
             line-height: 1.7;
         }
 
+
+        /* 人気事例 */
         .ranking-list {
             list-style: none;
             padding: 0;
@@ -89,9 +91,11 @@
             margin-top: 5px;
             color: #666;
             font-size: 0.9rem;
+            overflow-wrap: anywhere;
         }
 
         .ranking-helpful {
+            flex-shrink: 0;
             padding: 7px 10px;
             border-radius: 20px;
             background: #eef5ff;
@@ -106,15 +110,22 @@
             text-align: center;
         }
 
+
+        /* お知らせ */
         .notice-section {
             border-left: 6px solid #00838f;
         }
 
+        .notice-section h2 {
+            margin-bottom: 18px;
+        }
+
         .notice-title {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             color: #006064;
             font-size: 1.2rem;
             font-weight: bold;
+            overflow-wrap: anywhere;
         }
 
         .notice-body {
@@ -122,10 +133,11 @@
             line-height: 1.8;
             white-space: pre-wrap;
             overflow-wrap: anywhere;
+            word-break: normal;
         }
 
         .notice-updated {
-            margin-top: 18px;
+            margin-top: 14px;
             color: #777;
             font-size: 0.85rem;
             text-align: right;
@@ -140,6 +152,7 @@
         .notice-error {
             color: #b71c1c;
         }
+
 
         .admin-link-area {
             margin-top: 20px;
@@ -156,13 +169,113 @@
             text-decoration: none;
         }
 
+
+        /* スマホ表示 */
         @media (max-width: 600px) {
+
+            .container {
+                width: auto;
+                margin-left: 12px;
+                margin-right: 12px;
+            }
+
+            .news {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+
+            /* 人気事例 */
             .ranking-item {
                 align-items: flex-start;
+                gap: 9px;
+                padding: 14px 0;
+            }
+
+            .ranking-number {
+                min-width: 34px;
+                font-size: 1.15rem;
+            }
+
+            .ranking-title {
+                font-size: 1rem;
+                line-height: 1.5;
+            }
+
+            .ranking-info {
+                margin-top: 4px;
+                font-size: 0.86rem;
+                line-height: 1.5;
             }
 
             .ranking-helpful {
+                padding: 6px 9px;
                 font-size: 0.85rem;
+            }
+
+
+            /* お知らせ */
+            .notice-section {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .notice-section h2 {
+                margin-bottom: 14px;
+            }
+
+            .notice-title {
+                margin-bottom: 8px;
+                font-size: 1.05rem;
+                line-height: 1.5;
+            }
+
+            .notice-body {
+                width: 100%;
+                max-width: none;
+                margin: 0;
+                padding: 0;
+                font-size: 0.98rem;
+                line-height: 1.75;
+                text-align: left;
+            }
+
+            .notice-updated {
+                margin-top: 12px;
+                font-size: 0.8rem;
+                text-align: right;
+            }
+        }
+
+
+        /* かなり狭いスマホ */
+        @media (max-width: 400px) {
+
+            .container {
+                margin-left: 8px;
+                margin-right: 8px;
+            }
+
+            .news {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
+            .notice-section {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
+            .ranking-item {
+                gap: 7px;
+            }
+
+            .ranking-number {
+                min-width: 30px;
+            }
+
+            .ranking-helpful {
+                padding: 5px 8px;
             }
         }
     </style>
@@ -260,17 +373,18 @@
             統計を見る
         </a>
 
-<div style="text-align:center; margin:30px 0;">
 
-    <a
-        href="feedback.html"
-        class="button"
-    >
-        🐞 不具合・改善要望はこちら
-    </a>
+        <div style="text-align:center; margin:30px 0;">
 
-</div>
-        
+            <a
+                href="feedback.html"
+                class="button"
+            >
+                🐞 不具合・改善要望はこちら
+            </a>
+
+        </div>
+
     </nav>
 
 
@@ -322,7 +436,7 @@
 
 <footer>
 
-    Version 1.2.2
+    Version 1.2.3
 
     <br>
 
