@@ -141,6 +141,90 @@ function formatNoticeDate(value) {
 }
 
 
+// お知らせが掲載期間内か確認
+// 掲載日を含めて7日間だけ表示する
+function isNoticeWithinDisplayPeriod(notice) {
+  const value =
+    notice.displayDate ||
+    notice.date ||
+    notice.createdAt;
+
+  if (!value) {
+    return false;
+  }
+
+
+  let startDate;
+
+
+  // YYYY-MM-DD形式の場合
+  if (
+    typeof value ===
+    "string"
+  ) {
+    const parts =
+      value.split("-");
+
+    if (parts.length !== 3) {
+      return false;
+    }
+
+    startDate =
+      new Date(
+        Number(parts[0]),
+        Number(parts[1]) - 1,
+        Number(parts[2])
+      );
+
+  } else {
+    startDate =
+      convertToDate(value);
+  }
+
+
+  if (!startDate) {
+    return false;
+  }
+
+
+  // 掲載日の0時
+  startDate.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  // 今日の0時
+  const today =
+    new Date();
+
+  today.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  // 掲載終了日
+  // 掲載日＋7日目の0時になったら非表示
+  const endDate =
+    new Date(startDate);
+
+  endDate.setDate(
+    endDate.getDate() + 7
+  );
+
+
+  return (
+    today >= startDate &&
+    today < endDate
+  );
+}
+
+
 // 順位マーク
 function getRankingMark(index) {
   if (index === 0) {
@@ -408,7 +492,7 @@ function displayPopularReports(reports) {
           const helpful =
             Number(
               report.helpful || 0
-            );
+          );
 
           return `
             <li class="ranking-item">
@@ -595,6 +679,27 @@ function displayNotices(notices) {
 }
 
 
+// お知らせがない場合の表示
+function displayDefaultNotice() {
+  if (!noticeContent) {
+    return;
+  }
+
+  noticeContent.className =
+    "";
+
+  noticeContent.innerHTML = `
+    <div class="notice-title">
+      Fire Nearへようこそ
+    </div>
+
+    <p class="notice-body">
+      気付いたヒヤリハットは積極的に共有しましょう。
+    </p>
+  `;
+}
+
+
 // 以前のsettings/noticeを表示
 async function displayLegacyNotice() {
   const legacySnapshot =
@@ -611,6 +716,28 @@ async function displayLegacyNotice() {
   ) {
     const data =
       legacySnapshot.data();
+
+    /*
+     * 旧お知らせにも更新日時がある場合は
+     * 7日以内だけ表示する
+     */
+    const legacyDate =
+      data.updatedAt ||
+      data.createdAt ||
+      data.date;
+
+    if (
+      legacyDate &&
+      !isNoticeWithinDisplayPeriod({
+        createdAt:
+          legacyDate
+      })
+    ) {
+      displayDefaultNotice();
+
+      return;
+    }
+
 
     const title =
       data.title ||
@@ -655,18 +782,7 @@ async function displayLegacyNotice() {
   }
 
 
-  noticeContent.className =
-    "";
-
-  noticeContent.innerHTML = `
-    <div class="notice-title">
-      Fire Nearへようこそ
-    </div>
-
-    <p class="notice-body">
-      気付いたヒヤリハットは積極的に共有しましょう。
-    </p>
-  `;
+  displayDefaultNotice();
 }
 
 
@@ -708,7 +824,10 @@ async function loadNotice() {
 
         .filter(
           notice =>
-            notice.published !== false
+            notice.published !== false &&
+            isNoticeWithinDisplayPeriod(
+              notice
+            )
         );
 
 
